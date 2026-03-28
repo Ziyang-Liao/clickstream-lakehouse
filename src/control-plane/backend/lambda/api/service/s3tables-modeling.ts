@@ -246,35 +246,36 @@ export class S3TablesModelingService {
         })
         .slice(0, limit);
 
-      // Read each job info file
-      for (const obj of sortedObjects) {
-        if (!obj.Key) continue;
-
-        try {
-          const getCommand = new GetObjectCommand({
-            Bucket: pipelineS3Bucket,
-            Key: obj.Key,
-          });
-
-          const getResponse = await s3Client.send(getCommand);
-          const bodyString = await getResponse.Body?.transformToString();
-
-          if (bodyString) {
-            const jobInfo = JSON.parse(bodyString);
-            jobs.push({
-              jobRunId: jobInfo.jobRunId,
-              state: jobInfo.state,
-              startTimestamp: jobInfo.startTimestamp,
-              endTimestamp: jobInfo.endTimestamp,
-              startRunTime: jobInfo.startRunTime,
-              endRunTime: jobInfo.endRunTime,
-              triggerSource: jobInfo.triggerSource,
-            });
+      // Read job info files in parallel (instead of sequential)
+      const readPromises = sortedObjects
+        .filter(obj => obj.Key)
+        .map(async (obj) => {
+          try {
+            const getResponse = await s3Client.send(new GetObjectCommand({
+              Bucket: pipelineS3Bucket,
+              Key: obj.Key!,
+            }));
+            const bodyString = await getResponse.Body?.transformToString();
+            if (bodyString) {
+              const jobInfo = JSON.parse(bodyString);
+              return {
+                jobRunId: jobInfo.jobRunId,
+                state: jobInfo.state,
+                startTimestamp: jobInfo.startTimestamp,
+                endTimestamp: jobInfo.endTimestamp,
+                startRunTime: jobInfo.startRunTime,
+                endRunTime: jobInfo.endRunTime,
+                triggerSource: jobInfo.triggerSource,
+              } as S3TablesJobHistoryItem;
+            }
+          } catch (readError) {
+            logger.warn('Failed to read job info file', { key: obj.Key, error: readError });
           }
-        } catch (readError) {
-          logger.warn('Failed to read job info file', { key: obj.Key, error: readError });
-        }
-      }
+          return undefined;
+        });
+
+      const results = await Promise.all(readPromises);
+      jobs.push(...results.filter((r): r is S3TablesJobHistoryItem => r !== undefined));
     } catch (error) {
       logger.error('Failed to list job history from S3', error as Error);
     }

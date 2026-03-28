@@ -96,6 +96,12 @@ export class S3TablesModelingStack extends Stack {
     );
 
     // Create Security Group for EMR Serverless
+    // NOTE: EMR Serverless in VPC requires the following VPC endpoints:
+    //   - com.amazonaws.{region}.s3 (Gateway)
+    //   - com.amazonaws.{region}.s3tables (Interface) — for S3 Tables API
+    //   - com.amazonaws.{region}.glue (Interface) — for Glue Catalog
+    //   - com.amazonaws.{region}.logs (Interface) — for CloudWatch Logs
+    // These should be configured in the VPC before deploying this stack.
     const emrSecurityGroup = new SecurityGroup(this, 'EMRServerlessSecurityGroup', {
       vpc,
       description: 'Security group for EMR Serverless S3 Tables Modeling',

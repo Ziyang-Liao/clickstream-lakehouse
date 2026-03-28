@@ -97,12 +97,25 @@ public class S3TablesModelingConfig {
     }
 
     /**
+     * Pattern for valid SQL identifiers (table names, namespaces).
+     * Prevents SQL injection via config values.
+     */
+    private static final java.util.regex.Pattern SAFE_IDENTIFIER = java.util.regex.Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+
+    /**
      * Get the full table name with catalog and namespace.
      *
      * @param tableName The table name
      * @return Full qualified table name
+     * @throws IllegalArgumentException if tableName contains unsafe characters
      */
     public String getFullTableName(final String tableName) {
+        if (!SAFE_IDENTIFIER.matcher(tableName).matches()) {
+            throw new IllegalArgumentException("Invalid table name: " + tableName);
+        }
+        if (!SAFE_IDENTIFIER.matcher(namespace).matches()) {
+            throw new IllegalArgumentException("Invalid namespace: " + namespace);
+        }
         return String.format("%s.%s.%s", getCatalogName(), namespace, tableName);
     }
 
