@@ -70,21 +70,28 @@ public class S3TablesModelingConfig {
             );
         }
 
-        S3TablesModelingConfigBuilder builder = S3TablesModelingConfig.builder()
-            .projectId(args[0])
-            .appIds(args[1])
-            .tableBucketArn(args[2])
-            .namespace(args[3])
-            .odsS3Bucket(args[4])
-            .odsS3Prefix(args[5])
-            .startTimestamp(Long.parseLong(args[6]))
-            .endTimestamp(Long.parseLong(args[7]));
+        try {
+            S3TablesModelingConfigBuilder builder = S3TablesModelingConfig.builder()
+                .projectId(args[0])
+                .appIds(args[1])
+                .tableBucketArn(args[2])
+                .namespace(args[3])
+                .odsS3Bucket(args[4])
+                .odsS3Prefix(args[5])
+                .startTimestamp(Long.parseLong(args[6]))
+                .endTimestamp(Long.parseLong(args[7]));
 
-        if (args.length > 8) {
-            builder.dataRetentionDays(Integer.parseInt(args[8]));
+            if (args.length > 8) {
+                builder.dataRetentionDays(Integer.parseInt(args[8]));
+            }
+
+            return builder.build();
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                "Invalid numeric argument. startTimestamp(arg[6])=" + args[6]
+                    + ", endTimestamp(arg[7])=" + args[7]
+                    + (args.length > 8 ? ", dataRetentionDays(arg[8])=" + args[8] : ""), e);
         }
-
-        return builder.build();
     }
 
     /**
