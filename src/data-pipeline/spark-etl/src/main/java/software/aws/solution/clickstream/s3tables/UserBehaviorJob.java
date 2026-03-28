@@ -41,12 +41,10 @@ import static org.apache.spark.sql.functions.to_date;
  * Requirements: 5.4
  */
 @Slf4j
-public class UserBehaviorJob {
+public class UserBehaviorJob extends BaseModelingJob {
 
     public static final String USER_BEHAVIOR_TABLE = "user_behavior";
 
-    private final SparkSession spark;
-    private final S3TablesModelingConfig config;
 
     /**
      * Constructor for UserBehaviorJob.
@@ -55,8 +53,7 @@ public class UserBehaviorJob {
      * @param config Configuration for the modeling job
      */
     public UserBehaviorJob(final SparkSession spark, final S3TablesModelingConfig config) {
-        this.spark = spark;
-        this.config = config;
+        super(spark, config);
     }
 
     /**
@@ -83,43 +80,12 @@ public class UserBehaviorJob {
      *
      * @return Dataset of event data
      */
-    Dataset<Row> readOdsEventData() {
-        String odsPath = config.getOdsPath("event_v2");
-        log.info("Reading ODS event data from: {}", odsPath);
-
-        java.sql.Timestamp startTs = new java.sql.Timestamp(config.getStartTimestamp());
-        java.sql.Timestamp endTs = new java.sql.Timestamp(config.getEndTimestamp());
-
-        Dataset<Row> eventData = spark.read()
-            .parquet(odsPath)
-            .filter(col("event_timestamp").geq(startTs))
-            .filter(col("event_timestamp").lt(endTs));
-
-        long count = eventData.count();
-        log.info("Read {} events from ODS", count);
-
-        return eventData;
-    }
 
     /**
      * Read ODS user_v2 data.
      *
      * @return Dataset of user data
      */
-    Dataset<Row> readOdsUserData() {
-        String odsPath = config.getOdsPath("user_v2");
-        log.info("Reading ODS user data from: {}", odsPath);
-
-        try {
-            Dataset<Row> userData = spark.read().parquet(odsPath);
-            long count = userData.count();
-            log.info("Read {} users from ODS", count);
-            return userData;
-        } catch (Exception e) {
-            log.warn("Could not read user data: {}", e.getMessage());
-            return spark.emptyDataFrame();
-        }
-    }
 
     /**
      * Create or update the user_behavior table.

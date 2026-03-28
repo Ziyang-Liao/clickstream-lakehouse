@@ -34,16 +34,13 @@ import static org.apache.spark.sql.functions.when;
  * Aligned with Redshift clickstream_acquisition_day_user_acquisition.
  */
 @Slf4j
-public class UserAcquisitionJob {
+public class UserAcquisitionJob extends BaseModelingJob {
 
     public static final String USER_ACQUISITION_TABLE = "user_acquisition";
 
-    private final SparkSession spark;
-    private final S3TablesModelingConfig config;
 
     public UserAcquisitionJob(final SparkSession spark, final S3TablesModelingConfig config) {
-        this.spark = spark;
-        this.config = config;
+        super(spark, config);
     }
 
     public void run() {
@@ -58,30 +55,7 @@ public class UserAcquisitionJob {
         createUserAcquisition(eventData, userData);
     }
 
-    Dataset<Row> readOdsEventData() {
-        String odsPath = config.getOdsPath("event_v2");
-        log.info("Reading ODS event data from: {}", odsPath);
 
-        java.sql.Timestamp startTs = new java.sql.Timestamp(config.getStartTimestamp());
-        java.sql.Timestamp endTs = new java.sql.Timestamp(config.getEndTimestamp());
-
-        return spark.read()
-            .parquet(odsPath)
-            .filter(col("event_timestamp").geq(startTs))
-            .filter(col("event_timestamp").lt(endTs));
-    }
-
-    Dataset<Row> readOdsUserData() {
-        String odsPath = config.getOdsPath("user_v2");
-        log.info("Reading ODS user data from: {}", odsPath);
-
-        try {
-            return spark.read().parquet(odsPath);
-        } catch (Exception e) {
-            log.warn("Could not read user data: {}", e.getMessage());
-            return spark.emptyDataFrame();
-        }
-    }
 
     void createUserAcquisition(final Dataset<Row> eventData, final Dataset<Row> userData) {
         String tableName = config.getFullTableName(USER_ACQUISITION_TABLE);

@@ -31,16 +31,13 @@ import static org.apache.spark.sql.functions.to_date;
  * Aligned with Redshift clickstream_device_user_device.
  */
 @Slf4j
-public class DeviceJob {
+public class DeviceJob extends BaseModelingJob {
 
     public static final String DEVICE_TABLE = "device";
 
-    private final SparkSession spark;
-    private final S3TablesModelingConfig config;
 
     public DeviceJob(final SparkSession spark, final S3TablesModelingConfig config) {
-        this.spark = spark;
-        this.config = config;
+        super(spark, config);
     }
 
     public void run() {
@@ -54,18 +51,6 @@ public class DeviceJob {
         createDevice(eventData);
     }
 
-    Dataset<Row> readOdsEventData() {
-        String odsPath = config.getOdsPath("event_v2");
-        log.info("Reading ODS event data from: {}", odsPath);
-
-        java.sql.Timestamp startTs = new java.sql.Timestamp(config.getStartTimestamp());
-        java.sql.Timestamp endTs = new java.sql.Timestamp(config.getEndTimestamp());
-
-        return spark.read()
-            .parquet(odsPath)
-            .filter(col("event_timestamp").geq(startTs))
-            .filter(col("event_timestamp").lt(endTs));
-    }
 
     void createDevice(final Dataset<Row> eventData) {
         String tableName = config.getFullTableName(DEVICE_TABLE);

@@ -33,19 +33,16 @@ import static org.apache.spark.sql.functions.to_date;
  * Aligned with Redshift clickstream_retention_view_v3 metrics.
  */
 @Slf4j
-public class RetentionAnalysisJob {
+public class RetentionAnalysisJob extends BaseModelingJob {
 
     public static final String RETENTION_DAILY_TABLE = "retention_daily";
     public static final String RETENTION_WEEKLY_TABLE = "retention_weekly";
     private static final int MAX_RETENTION_DAYS = 42;
     private static final int MAX_RETENTION_WEEKS = 12;
 
-    private final SparkSession spark;
-    private final S3TablesModelingConfig config;
 
     public RetentionAnalysisJob(final SparkSession spark, final S3TablesModelingConfig config) {
-        this.spark = spark;
-        this.config = config;
+        super(spark, config);
     }
 
     public void run() {
@@ -61,38 +58,7 @@ public class RetentionAnalysisJob {
         createWeeklyRetention(eventData, userData);
     }
 
-    Dataset<Row> readOdsEventData() {
-        String odsPath = config.getOdsPath("event_v2");
-        log.info("Reading ODS event data from: {}", odsPath);
 
-        java.sql.Timestamp startTs = new java.sql.Timestamp(config.getStartTimestamp());
-        java.sql.Timestamp endTs = new java.sql.Timestamp(config.getEndTimestamp());
-
-        Dataset<Row> eventData = spark.read()
-            .parquet(odsPath)
-            .filter(col("event_timestamp").geq(startTs))
-            .filter(col("event_timestamp").lt(endTs));
-
-        long count = eventData.count();
-        log.info("Read {} events from ODS", count);
-
-        return eventData;
-    }
-
-    Dataset<Row> readOdsUserData() {
-        String odsPath = config.getOdsPath("user_v2");
-        log.info("Reading ODS user data from: {}", odsPath);
-
-        try {
-            Dataset<Row> userData = spark.read().parquet(odsPath);
-            long count = userData.count();
-            log.info("Read {} users from ODS", count);
-            return userData;
-        } catch (Exception e) {
-            log.warn("Could not read user data: {}", e.getMessage());
-            return spark.emptyDataFrame();
-        }
-    }
 
     void createDailyRetention(final Dataset<Row> eventData, final Dataset<Row> userData) {
         String tableName = config.getFullTableName(RETENTION_DAILY_TABLE);

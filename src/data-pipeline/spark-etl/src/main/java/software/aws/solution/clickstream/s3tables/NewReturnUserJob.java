@@ -31,16 +31,13 @@ import static org.apache.spark.sql.functions.when;
  * Aligned with Redshift clickstream_retention_user_new_return.
  */
 @Slf4j
-public class NewReturnUserJob {
+public class NewReturnUserJob extends BaseModelingJob {
 
     public static final String NEW_RETURN_USER_TABLE = "new_return_user";
 
-    private final SparkSession spark;
-    private final S3TablesModelingConfig config;
 
     public NewReturnUserJob(final SparkSession spark, final S3TablesModelingConfig config) {
-        this.spark = spark;
-        this.config = config;
+        super(spark, config);
     }
 
     public void run() {
@@ -54,18 +51,6 @@ public class NewReturnUserJob {
         createNewReturnUser(eventData);
     }
 
-    Dataset<Row> readOdsEventData() {
-        String odsPath = config.getOdsPath("event_v2");
-        log.info("Reading ODS event data from: {}", odsPath);
-
-        java.sql.Timestamp startTs = new java.sql.Timestamp(config.getStartTimestamp());
-        java.sql.Timestamp endTs = new java.sql.Timestamp(config.getEndTimestamp());
-
-        return spark.read()
-            .parquet(odsPath)
-            .filter(col("event_timestamp").geq(startTs))
-            .filter(col("event_timestamp").lt(endTs));
-    }
 
     void createNewReturnUser(final Dataset<Row> eventData) {
         String tableName = config.getFullTableName(NEW_RETURN_USER_TABLE);
@@ -128,15 +113,6 @@ public class NewReturnUserJob {
         log.info("New/return user updated successfully");
     }
 
-    Dataset<Row> readOdsUserData() {
-        String odsPath = config.getOdsPath("user_v2");
-        try {
-            return spark.read().parquet(odsPath);
-        } catch (Exception e) {
-            log.warn("Could not read user data: {}", e.getMessage());
-            return spark.emptyDataFrame();
-        }
-    }
 
     private boolean hasFirstTouchField(final Dataset<Row> userData) {
         return java.util.Arrays.asList(userData.columns()).contains("first_touch_time_msec");
