@@ -67,6 +67,7 @@ public abstract class BaseModelingJob {
 
     /**
      * Read an ODS table filtered by the configured time range.
+     * Uses partition pruning on year=/month=/day= structure to avoid full table scan.
      */
     protected Dataset<Row> readOdsTable(final String tableName) {
         String odsPath = config.getOdsPath(tableName);
@@ -76,10 +77,20 @@ public abstract class BaseModelingJob {
             java.sql.Timestamp startTs = new java.sql.Timestamp(config.getStartTimestamp());
             java.sql.Timestamp endTs = new java.sql.Timestamp(config.getEndTimestamp());
 
-            Dataset<Row> data = spark.read()
-                .parquet(odsPath)
-                .filter(org.apache.spark.sql.functions.col("event_timestamp").geq(startTs))
-                .filter(org.apache.spark.sql.functions.col("event_timestamp").lt(endTs));
+            // Build partition-pruned paths to avoid scanning all historical data
+            String[] partitionPaths = getPartitionPaths(odsPath, config.getStartTimestamp(), config.getEndTimestamp());
+
+            Dataset<Row> data;
+            if (partitionPaths.length > 0) {
+                data = spark.read().parquet(partitionPaths)
+                    .filter(org.apache.spark.sql.functions.col("event_timestamp").geq(startTs))
+                    .filter(org.apache.spark.sql.functions.col("event_timestamp").lt(endTs));
+            } else {
+                // Fallback: read entire path if partition paths can't be determined
+                data = spark.read().parquet(odsPath)
+                    .filter(org.apache.spark.sql.functions.col("event_timestamp").geq(startTs))
+                    .filter(org.apache.spark.sql.functions.col("event_timestamp").lt(endTs));
+            }
 
             long count = data.count();
             log.info("Read {} rows from ODS {}", count, tableName);
@@ -87,6 +98,41 @@ public abstract class BaseModelingJob {
         } catch (Exception e) {
             return handleOdsReadError(odsPath, e);
         }
+    }
+
+    /**
+     * Generate partition paths for the given time range.
+     * ODS data is partitioned as: {basePath}/year=YYYY/month=MM/day=DD/
+     */
+    private String[] getPartitionPaths(String basePath, long startTimestamp, long endTimestamp) {
+        if (!basePath.endsWith("/")) {
+            basePath = basePath + "/";
+        }
+        java.util.List<String> paths = new java.util.ArrayList<>();
+        long oneDay = 24L * 60 * 60 * 1000;
+        long current = startTimestamp;
+
+        while (current <= endTimestamp) {
+            java.time.LocalDate date = java.time.Instant.ofEpochMilli(current)
+                .atZone(java.time.ZoneOffset.UTC).toLocalDate();
+            String path = String.format("%syear=%04d/month=%02d/day=%02d/",
+                basePath, date.getYear(), date.getMonthValue(), date.getDayOfMonth());
+            if (!paths.contains(path)) {
+                paths.add(path);
+            }
+            current += oneDay;
+        }
+        // Ensure end date is included
+        java.time.LocalDate endDate = java.time.Instant.ofEpochMilli(endTimestamp)
+            .atZone(java.time.ZoneOffset.UTC).toLocalDate();
+        String endPath = String.format("%syear=%04d/month=%02d/day=%02d/",
+            basePath, endDate.getYear(), endDate.getMonthValue(), endDate.getDayOfMonth());
+        if (!paths.contains(endPath)) {
+            paths.add(endPath);
+        }
+
+        log.info("Partition pruning: {} paths for time range [{} - {}]", paths.size(), startTimestamp, endTimestamp);
+        return paths.toArray(new String[0]);
     }
 
     /**

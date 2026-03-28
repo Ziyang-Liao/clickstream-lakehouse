@@ -14,6 +14,8 @@
 package software.aws.solution.clickstream.s3tables;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 /**
@@ -95,6 +97,7 @@ public class S3TablesModelingRunner {
 
     /**
      * Run all data modeling jobs in sequence.
+     * ODS data is read once and cached to avoid redundant S3 reads across 15 jobs.
      */
     public void run() {
         log.info("Starting data modeling jobs for time range: {} to {}",
@@ -102,6 +105,32 @@ public class S3TablesModelingRunner {
 
         // Ensure namespace exists before running jobs
         ensureNamespaceExists();
+
+        // Pre-read and cache ODS data — shared across all jobs
+        log.info("Pre-reading ODS data...");
+        BaseModelingJob loader = new EventAggregationJob(spark, config);
+        Dataset<Row> cachedEventData = loader.readOdsEventData().cache();
+        long eventCount = cachedEventData.count();
+        log.info("Cached {} event rows", eventCount);
+
+        Dataset<Row> cachedUserData = loader.readOdsUserData().cache();
+        long userCount = cachedUserData.count();
+        log.info("Cached {} user rows", userCount);
+
+        // Register as temp views so all jobs can access without re-reading
+        cachedEventData.createOrReplaceTempView("cached_ods_event_v2");
+        cachedUserData.createOrReplaceTempView("cached_ods_user_v2");
+
+        try {
+            runAllJobs();
+        } finally {
+            cachedEventData.unpersist();
+            cachedUserData.unpersist();
+            log.info("Unpersisted cached ODS data");
+        }
+    }
+
+    private void runAllJobs() {
 
         // Run Event Aggregation Job
         log.info("Running EventAggregationJob...");
