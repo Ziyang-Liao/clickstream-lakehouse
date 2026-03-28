@@ -1,0 +1,11 @@
+cdk.out/
+test*
+**/node_modules/
+script
+coverage
+deployment/
+docs/
+coverage/
+.git/
+.gitlab/
+.github/
