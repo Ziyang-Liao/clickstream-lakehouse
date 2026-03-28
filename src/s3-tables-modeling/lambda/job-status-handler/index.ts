@@ -39,13 +39,13 @@ export const handler = async (
   logger.info('Received EMR Serverless job state change event', { event });
 
   const { jobRunId, state, stateDetails } = event.detail;
-  const pipelineS3Bucket = process.env.PIPELINE_S3_BUCKET || '';
+  const pipelineS3Bucket = process.env.PIPELINE_S3_BUCKET;
   const pipelineS3Prefix = process.env.PIPELINE_S3_PREFIX || '';
-  const projectId = process.env.PROJECT_ID || '';
+  const projectId = process.env.PROJECT_ID;
 
   if (!pipelineS3Bucket || !projectId) {
-    logger.error('Missing required environment variables', { pipelineS3Bucket, projectId });
-    return;
+    logger.error('Missing required environment variables: PIPELINE_S3_BUCKET or PROJECT_ID');
+    throw new Error('Missing required environment variables: PIPELINE_S3_BUCKET or PROJECT_ID');
   }
 
   const jobInfoKey = `${pipelineS3Prefix}s3tables-job-info/${projectId}/job-${jobRunId}.json`;
@@ -75,19 +75,18 @@ export const handler = async (
 
     logger.info('Job info updated successfully', { jobRunId, state });
 
-    // If this was the latest job, update the latest marker
+    // Update the latest marker — only if this job is newer than the current latest
     if (existingJobInfo?.jobRunId !== 'latest') {
       const latestJobKey = `${pipelineS3Prefix}s3tables-job-info/${projectId}/job-latest.json`;
       const latestJobInfo = await readS3ObjectAsJson(pipelineS3Bucket, latestJobKey);
 
-      // Only update latest if this job's timestamps match
-      if (latestJobInfo &&
-          latestJobInfo.startTimestamp === existingJobInfo?.startTimestamp &&
-          latestJobInfo.endTimestamp === existingJobInfo?.endTimestamp) {
+      const thisEndTs = existingJobInfo?.endTimestamp || 0;
+      const latestEndTs = latestJobInfo?.endTimestamp || 0;
+
+      // Only update if this job covers a newer or equal time range
+      if (thisEndTs >= latestEndTs) {
         const updatedLatestInfo = {
-          ...latestJobInfo,
-          state,
-          stateDetails: stateDetails || `Job ${state}`,
+          ...updatedJobInfo,
           endRunTime: new Date().toISOString(),
         };
 
@@ -97,7 +96,7 @@ export const handler = async (
           latestJobKey,
         );
 
-        logger.info('Latest job info updated', { state });
+        logger.info('Latest job info updated', { state, thisEndTs, latestEndTs });
       }
     }
   } catch (error) {

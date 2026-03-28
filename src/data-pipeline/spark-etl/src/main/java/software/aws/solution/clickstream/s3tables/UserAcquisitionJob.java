@@ -158,7 +158,7 @@ public class UserAcquisitionJob extends BaseModelingJob {
                 + "   AND target.aggregation_type = source.aggregation_type "
                 + "   AND coalesce(target.aggregation_dim, '') = coalesce(source.aggregation_dim, '') "
                 + "   AND coalesce(target.platform, '') = coalesce(source.platform, '') "
-                + "   AND target.user_pseudo_id = source.user_pseudo_id "
+                + "   AND coalesce(target.user_pseudo_id, '') = coalesce(source.user_pseudo_id, '') "
                 + "WHEN MATCHED THEN UPDATE SET * "
                 + "WHEN NOT MATCHED THEN INSERT *",
             tableName

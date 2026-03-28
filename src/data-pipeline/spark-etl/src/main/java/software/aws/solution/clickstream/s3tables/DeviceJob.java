@@ -83,7 +83,7 @@ public class DeviceJob extends BaseModelingJob {
                 + "USING device_updates AS source "
                 + "ON target.app_id = source.app_id "
                 + "   AND target.event_date = source.event_date "
-                + "   AND target.user_pseudo_id = source.user_pseudo_id "
+                + "   AND coalesce(target.user_pseudo_id, '') = coalesce(source.user_pseudo_id, '') "
                 + "   AND coalesce(target.platform, '') = coalesce(source.platform, '') "
                 + "   AND coalesce(target.device, '') = coalesce(source.device, '') "
                 + "   AND coalesce(target.app_version, '') = coalesce(source.app_version, '') "

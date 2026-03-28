@@ -125,7 +125,7 @@ public class UserBehaviorJob extends BaseModelingJob {
             "MERGE INTO %s AS target "
                 + "USING user_behavior_updates AS source "
                 + "ON target.app_id = source.app_id "
-                + "   AND target.user_pseudo_id = source.user_pseudo_id "
+                + "   AND coalesce(target.user_pseudo_id, '') = coalesce(source.user_pseudo_id, '') "
                 + "WHEN MATCHED THEN UPDATE SET "
                 + "   user_id = source.user_id, "
                 + "   first_visit_date = LEAST(target.first_visit_date, source.first_visit_date), "

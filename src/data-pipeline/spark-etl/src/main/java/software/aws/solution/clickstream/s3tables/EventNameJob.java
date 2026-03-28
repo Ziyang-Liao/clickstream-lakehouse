@@ -75,7 +75,7 @@ public class EventNameJob extends BaseModelingJob {
                 + "ON target.app_id = source.app_id "
                 + "   AND target.event_date = source.event_date "
                 + "   AND coalesce(target.platform, '') = coalesce(source.platform, '') "
-                + "   AND target.user_pseudo_id = source.user_pseudo_id "
+                + "   AND coalesce(target.user_pseudo_id, '') = coalesce(source.user_pseudo_id, '') "
                 + "   AND target.event_name = source.event_name "
                 + "WHEN MATCHED THEN UPDATE SET * "
                 + "WHEN NOT MATCHED THEN INSERT *",

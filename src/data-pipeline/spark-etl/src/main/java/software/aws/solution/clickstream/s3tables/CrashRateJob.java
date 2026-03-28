@@ -72,7 +72,7 @@ public class CrashRateJob extends BaseModelingJob {
                 + "   AND target.event_date = source.event_date "
                 + "   AND coalesce(target.platform, '') = coalesce(source.platform, '') "
                 + "   AND coalesce(target.app_version, '') = coalesce(source.app_version, '') "
-                + "   AND target.user_pseudo_id = source.user_pseudo_id "
+                + "   AND coalesce(target.user_pseudo_id, '') = coalesce(source.user_pseudo_id, '') "
                 + "WHEN MATCHED THEN UPDATE SET * "
                 + "WHEN NOT MATCHED THEN INSERT *",
             tableName

@@ -332,27 +332,26 @@ export class S3TablesModelingService {
   }
 
   /**
-   * Invoke Lambda function to trigger job
+   * Invoke Lambda function to trigger job (asynchronous).
+   * Returns immediately after Lambda accepts the invocation.
    */
   private async invokeLambda(functionArn: string, event: S3TablesJobTriggerEvent): Promise<S3TablesJobResponse> {
     const command = new InvokeCommand({
       FunctionName: functionArn,
-      InvocationType: 'RequestResponse',
+      InvocationType: 'Event',
       Payload: Buffer.from(JSON.stringify(event)),
     });
 
     const response = await lambdaClient.send(command);
 
-    if (response.FunctionError) {
-      const errorPayload = response.Payload ? JSON.parse(Buffer.from(response.Payload).toString()) : {};
-      throw new Error(`Lambda invocation failed: ${errorPayload.errorMessage || response.FunctionError}`);
+    // Async invocation returns 202 on success, no payload
+    if (response.StatusCode !== 202) {
+      throw new Error(`Lambda async invocation failed with status ${response.StatusCode}`);
     }
 
-    if (!response.Payload) {
-      throw new Error('Lambda invocation returned no payload');
-    }
-
-    const payload = JSON.parse(Buffer.from(response.Payload).toString());
-    return payload as S3TablesJobResponse;
+    return {
+      status: 'SUBMITTED',
+      message: 'Job trigger accepted. Check status endpoint for progress.',
+    };
   }
 }

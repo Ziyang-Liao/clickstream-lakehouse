@@ -104,7 +104,7 @@ public class SessionAnalysisJob extends BaseModelingJob {
             "MERGE INTO %s AS target "
                 + "USING session_analysis_updates AS source "
                 + "ON target.app_id = source.app_id "
-                + "   AND target.session_id = source.session_id "
+                + "   AND coalesce(target.session_id, '') = coalesce(source.session_id, '') "
                 + "   AND target.event_date = source.event_date "
                 + "WHEN MATCHED THEN UPDATE SET "
                 + "   user_pseudo_id = source.user_pseudo_id, "
