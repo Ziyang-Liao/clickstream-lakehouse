@@ -24,6 +24,7 @@ import {
   ServicePrincipal,
 } from 'aws-cdk-lib/aws-iam';
 import { Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
+import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { NagSuppressions } from 'cdk-nag';
 import { Construct } from 'constructs';
@@ -325,6 +326,8 @@ export class S3TablesModelingStack extends Stack {
       runtime: Runtime.NODEJS_20_X,
       memorySize: 256,
       timeout: Duration.minutes(5),
+      reservedConcurrentExecutions: 1,
+      logRetention: RetentionDays.ONE_MONTH,
       role: lambdaRole,
       tracing: Tracing.ACTIVE,
       vpc,
@@ -386,6 +389,7 @@ export class S3TablesModelingStack extends Stack {
       runtime: Runtime.NODEJS_20_X,
       memorySize: 256,
       timeout: Duration.seconds(60),
+      logRetention: RetentionDays.ONE_MONTH,
       role: lambdaRole,
       tracing: Tracing.ACTIVE,
       vpc,

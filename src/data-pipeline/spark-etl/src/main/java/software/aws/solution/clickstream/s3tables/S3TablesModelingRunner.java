@@ -131,83 +131,45 @@ public class S3TablesModelingRunner {
     }
 
     private void runAllJobs() {
+        java.util.List<String> failedJobs = new java.util.ArrayList<>();
 
-        // Run Event Aggregation Job
-        log.info("Running EventAggregationJob...");
-        new EventAggregationJob(spark, config).run();
-        log.info("EventAggregationJob completed");
+        BaseModelingJob[] jobs = {
+            new EventAggregationJob(spark, config),
+            new UserBehaviorJob(spark, config),
+            new SessionAnalysisJob(spark, config),
+            new EngagementKpiJob(spark, config),
+            new RetentionAnalysisJob(spark, config),
+            new UserAcquisitionJob(spark, config),
+            new GeoUserJob(spark, config),
+            new ActiveUserJob(spark, config),
+            new NewReturnUserJob(spark, config),
+            new DeviceJob(spark, config),
+            new CrashRateJob(spark, config),
+            new PageScreenViewJob(spark, config),
+            new EntranceExitJob(spark, config),
+            new EventNameJob(spark, config),
+            new LifecycleJob(spark, config),
+        };
 
-        // Run User Behavior Job
-        log.info("Running UserBehaviorJob...");
-        new UserBehaviorJob(spark, config).run();
-        log.info("UserBehaviorJob completed");
+        for (BaseModelingJob job : jobs) {
+            String jobName = job.getClass().getSimpleName();
+            try {
+                log.info("Running {}...", jobName);
+                job.run();
+                log.info("{} completed", jobName);
+            } catch (Exception e) {
+                log.error("{} failed: {}", jobName, e.getMessage(), e);
+                failedJobs.add(jobName);
+            }
+        }
 
-        // Run Session Analysis Job
-        log.info("Running SessionAnalysisJob...");
-        new SessionAnalysisJob(spark, config).run();
-        log.info("SessionAnalysisJob completed");
-
-        // Run Engagement KPI Job
-        log.info("Running EngagementKpiJob...");
-        new EngagementKpiJob(spark, config).run();
-        log.info("EngagementKpiJob completed");
-
-        // Run Retention Analysis Job
-        log.info("Running RetentionAnalysisJob...");
-        new RetentionAnalysisJob(spark, config).run();
-        log.info("RetentionAnalysisJob completed");
-
-        // Run User Acquisition Job
-        log.info("Running UserAcquisitionJob...");
-        new UserAcquisitionJob(spark, config).run();
-        log.info("UserAcquisitionJob completed");
-
-        // Run Geo User Job
-        log.info("Running GeoUserJob...");
-        new GeoUserJob(spark, config).run();
-        log.info("GeoUserJob completed");
-
-        // Run Active User Job (DAU/WAU/MAU)
-        log.info("Running ActiveUserJob...");
-        new ActiveUserJob(spark, config).run();
-        log.info("ActiveUserJob completed");
-
-        // Run New/Return User Job
-        log.info("Running NewReturnUserJob...");
-        new NewReturnUserJob(spark, config).run();
-        log.info("NewReturnUserJob completed");
-
-        // Run Device Job
-        log.info("Running DeviceJob...");
-        new DeviceJob(spark, config).run();
-        log.info("DeviceJob completed");
-
-        // Run Crash Rate Job
-        log.info("Running CrashRateJob...");
-        new CrashRateJob(spark, config).run();
-        log.info("CrashRateJob completed");
-
-        // Run Page/Screen View Job
-        log.info("Running PageScreenViewJob...");
-        new PageScreenViewJob(spark, config).run();
-        log.info("PageScreenViewJob completed");
-
-        // Run Entrance/Exit Job
-        log.info("Running EntranceExitJob...");
-        new EntranceExitJob(spark, config).run();
-        log.info("EntranceExitJob completed");
-
-        // Run Event Name Job
-        log.info("Running EventNameJob...");
-        new EventNameJob(spark, config).run();
-        log.info("EventNameJob completed");
-
-        // Run Lifecycle Job
-        log.info("Running LifecycleJob...");
-        new LifecycleJob(spark, config).run();
-        log.info("LifecycleJob completed");
-
-        log.info("All data modeling jobs completed successfully");
+        if (failedJobs.isEmpty()) {
+            log.info("All {} data modeling jobs completed successfully", jobs.length);
+        } else {
+            String msg = String.format("%d/%d jobs failed: %s", failedJobs.size(), jobs.length, failedJobs);
+            log.error(msg);
+            throw new RuntimeException(msg);
+        }
     }
 
     /**

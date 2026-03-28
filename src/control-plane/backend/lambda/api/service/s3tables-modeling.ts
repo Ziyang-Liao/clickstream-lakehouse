@@ -22,8 +22,8 @@ import { IPipeline } from '../model/pipeline';
 import { ClickStreamStore } from '../store/click-stream-store';
 import { DynamoDbStore } from '../store/dynamodb/dynamodb-store';
 
-// Output constants for S3 Tables Modeling Stack
-// These must match the output logical IDs in s3-tables-modeling-stack.ts
+// Output constants — must match the logical IDs in s3-tables-modeling-stack.ts
+// Imported as string literals to avoid circular dependency with CDK stack
 const OUTPUT_S3_TABLES_MODELING_EMR_APPLICATION_ID = 'S3TablesModelingEMRApplicationId';
 const OUTPUT_S3_TABLES_MODELING_JOB_SUBMITTER_FUNCTION_ARN = 'S3TablesModelingJobSubmitterFunctionArn';
 
