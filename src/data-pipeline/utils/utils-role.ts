@@ -132,7 +132,7 @@ export class RoleUtil {
       new PolicyStatement({
         effect: Effect.ALLOW,
         resources: [
-          // arn:aws:iam::1111222233333:role/aws-service-role/ops.emr-serverless.amazonaws.com/AWSServiceRoleForAmazonEMRServerless
+          // arn:aws:iam::<EXAMPLE_ACCOUNT_ID>:role/aws-service-role/ops.emr-serverless.amazonaws.com/AWSServiceRoleForAmazonEMRServerless
           Arn.format(
             {
               resource: 'role/aws-service-role/ops.emr-serverless.amazonaws.com/AWSServiceRoleForAmazonEMRServerless',

@@ -126,10 +126,10 @@ export class ClickStreamApiConstruct extends Construct {
     const webAdapterlayerMap = new CfnMapping(this, 'RegionLayerMap', {
       mapping: {
         'cn-north-1': {
-          LayerArn: 'arn:aws-cn:lambda:cn-north-1:041581134020:layer:LambdaAdapterLayerX86:25',
+          LayerArn: 'arn:aws-cn:lambda:cn-north-1:<LAMBDA_ADAPTER_ACCOUNT_ID>:layer:LambdaAdapterLayerX86:25',
         },
         'cn-northwest-1': {
-          LayerArn: 'arn:aws-cn:lambda:cn-northwest-1:069767869989:layer:LambdaAdapterLayerX86:25',
+          LayerArn: 'arn:aws-cn:lambda:cn-northwest-1:<LAMBDA_ADAPTER_ACCOUNT_ID>:layer:LambdaAdapterLayerX86:25',
         },
       },
     });
@@ -257,7 +257,7 @@ export class ClickStreamApiConstruct extends Construct {
     props.stackWorkflowS3Bucket.grantPut(this.uploadRole, `${props.pluginPrefix}*`);
 
     // Create api function
-    const webAdapterlayer = webAdapterlayerMap.findInMap(Aws.REGION, 'LayerArn', `arn:aws:lambda:${Aws.REGION}:753240598075:layer:LambdaAdapterLayerX86:25`);
+    const webAdapterlayer = webAdapterlayerMap.findInMap(Aws.REGION, 'LayerArn', `arn:aws:lambda:${Aws.REGION}:<LAMBDA_ADAPTER_ACCOUNT_ID>:layer:LambdaAdapterLayerX86:25`);
     this.apiFunction = this.createApiFunction(props, this.lambdaFunctionNetwork, apiFunctionRole, webAdapterlayer);
 
     if (props.fronting === 'cloudfront') {

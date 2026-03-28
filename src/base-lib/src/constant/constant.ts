@@ -17,76 +17,76 @@
 export const ALBLogServiceAccountMapping = {
   mapping: {
     'me-south-1': {
-      account: '076674570225',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'eu-south-1': {
-      account: '635631232127',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'ap-northeast-1': {
-      account: '582318560864',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'ap-northeast-2': {
-      account: '600734575887',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'ap-northeast-3': {
-      account: '383597477331',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'ap-south-1': {
-      account: '718504428378',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'ap-southeast-1': {
-      account: '114774131450',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'ap-southeast-2': {
-      account: '783225319266',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'ca-central-1': {
-      account: '985666609251',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'eu-central-1': {
-      account: '054676820928',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'eu-north-1': {
-      account: '897822967062',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'eu-west-1': {
-      account: '156460612806',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'eu-west-2': {
-      account: '652711504416',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'eu-west-3': {
-      account: '009996457667',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'sa-east-1': {
-      account: '507241528517',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'us-east-1': {
-      account: '127311923021',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'us-east-2': {
-      account: '033677994240',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'us-west-1': {
-      account: '027434742980',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'us-west-2': {
-      account: '797873946194',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'ap-east-1': {
-      account: '754344448648',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'af-south-1': {
-      account: '098369216593',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'ap-southeast-3': {
-      account: '589379963580',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'cn-north-1': {
-      account: '638102146993',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
     'cn-northwest-1': {
-      account: '037604701340',
+      account: '<ALB_LOG_ACCOUNT_ID>',
     },
   },
 };
