@@ -1,5 +1,77 @@
 # Clickstream Analytics on AWS Guidance
 
+## 新增功能与改进
+
+基于 [aws-solutions/clickstream-analytics-on-aws](https://github.com/aws-solutions/clickstream-analytics-on-aws) 进行了以下功能扩展和 bug 修复。
+
+### 功能一：EMR Serverless + S3 Tables 数据建模
+
+在现有 Redshift 数据建模之外，新增基于 **S3 Tables (Apache Iceberg)** 的数据建模选项。
+
+- 与 Redshift 建模互斥，通过 Pipeline 创建向导选择
+- 使用 EMR Serverless 7.5+ 运行 Spark 作业，输出到 S3 Tables (Iceberg 格式)
+- 包含 15 个建模 Job：事件聚合、用户行为、会话分析、留存分析、活跃用户(DAU/WAU/MAU)、新老用户、设备分析、地理分析、崩溃率、页面/屏幕浏览、入口/出口页、事件名称、用户获取、参与度 KPI、生命周期
+- 所有 Job 使用 Iceberg MERGE INTO 保证幂等性
+- EventBridge 定时调度 + Lambda 作业提交器 + 指数退避重试
+- API 端点：手动触发 / 查询状态 / 作业历史
+- 前端：Pipeline 向导中选择 S3 Tables 选项、详情页展示状态和作业历史
+
+**相关代码：**
+- CDK Stack: `src/s3-tables-modeling-stack.ts`
+- Spark Jobs: `src/data-pipeline/spark-etl/src/main/java/.../s3tables/`
+- Lambda: `src/s3-tables-modeling/lambda/`
+- API: `src/control-plane/backend/lambda/api/router/s3tables-modeling.ts`
+- 需求文档: `.kiro/specs/s3-tables-data-modeling/`
+
+### 功能二：字段收集过滤
+
+允许用户通过 Web 控制台配置字段白名单/黑名单，在 ETL 阶段过滤不需要的字段。
+
+- 支持 **白名单模式**（仅收集指定字段）和 **黑名单模式**（排除指定字段）
+- 支持管道级和应用级规则，应用级优先
+- 系统必需字段（event_id、event_timestamp、user_pseudo_id 等）不可被过滤
+- 字段名正则校验、最多 500 个字段、自动去重
+- 过滤规则从 DynamoDB 同步到 S3，Spark ETL 按 app_id 分区独立过滤
+- 级联删除：删除管道/应用时自动清理关联过滤规则
+- 前端：管道详情页 Field Filter Tab、应用详情页过滤配置
+
+**相关代码：**
+- API: `src/control-plane/backend/lambda/api/router/field-filter.ts`
+- Service: `src/control-plane/backend/lambda/api/service/field-filter.ts`
+- Spark: `src/data-pipeline/spark-etl/src/main/java/.../transformer/FieldFilterTransformer.java`
+- 需求文档: `.kiro/specs/field-collection-filter/`
+
+### 功能三：EMR Serverless ETL 引擎选项
+
+在现有 Redshift ETL 基础上，增加使用 EMR Serverless 进行数据计算的选项。
+
+- Web 控制台选择 "Redshift"（默认）或 "EMR Serverless" 引擎
+- EMR Serverless 执行聚合计算 → 写 S3 Parquet → Redshift COPY 加载
+- 支持全局配置和按应用配置，按应用配置优先
+- 配置变更自动同步到 S3 供 Spark 读取
+
+**相关代码：**
+- 需求文档: `.kiro/specs/emr-etl-field-filter/`
+
+### Bug 修复
+
+| Bug | 修复 |
+|-----|------|
+| Workflow 中 Redshift 和 S3 Tables 互斥无防御检查 | 重构为 if/else if 互斥分支，两者同时存在时防御性降级 |
+| S3 Tables 模式下 Reporting stack 不会被挂载 | Reporting 现在正确跟随任一建模 stack |
+| PIPELINE_ID 回退到 projectId 导致字段过滤规则查不到 | 移除错误 fallback，缺失时跳过并输出警告 |
+| API 和 Lambda 的 S3 prefix 路径不一致导致作业历史查不到 | 统一使用 `getBucketPrefix()` |
+| DynamoDB listFieldFilterRules 使用 GSI 全表扫描 | 改用主表 primary key 查询 |
+| SQL execution Lambda 硬编码 NODEJS_18_X | 改为 NODEJS_20_X，中国区由 Aspect 自动降级 |
+| GitLab CI 默认镜像 Node 16 (EOL) | 升级到 Node 20 |
+| data-pipeline Spark ETL 构建镜像 JDK 11 (EOL) | 升级到 JDK 17 |
+| Spark 字段过滤只用第一个 app 规则过滤全部多 app 数据 | 按 app_id 分区独立过滤再 union |
+| Spark pipelineId 查找使用 projectId 导致 pipeline 规则匹配不到 | 从已加载的 pipeline rules 中提取真实 pipelineId |
+| S3 Tables ODS 路径缺少 trailing slash 防御 | 加防御性检查 |
+| S3 Tables Spark 用 `--packages` 运行时下载依赖，VPC 无外网环境失败 | 改为构建时下载 JAR 上传 S3，用 `--jars` 加载 |
+
+---
+
 ## Table of Contents
 
 1. [Overview](#overview-required)
