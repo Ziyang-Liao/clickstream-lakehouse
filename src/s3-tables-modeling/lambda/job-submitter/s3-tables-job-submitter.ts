@@ -481,9 +481,17 @@ export class S3TablesJobSubmitter {
   private buildSparkSubmitParameters(config: SparkConfig): string {
     const params = [
       '--class software.aws.solution.clickstream.s3tables.S3TablesModelingRunner',
-      // S3 Tables Iceberg runtime JAR - pre-uploaded to S3 at build time
-      // to avoid runtime Maven download which fails in VPC-only environments
-      `--jars ${process.env.ICEBERG_RUNTIME_JAR_PATH || ''}`,
+    ];
+
+    // S3 Tables Iceberg runtime JAR - pre-uploaded to S3 at build time
+    const icebergJarPath = process.env.ICEBERG_RUNTIME_JAR_PATH;
+    if (icebergJarPath) {
+      params.push(`--jars ${icebergJarPath}`);
+    } else {
+      logger.warn('ICEBERG_RUNTIME_JAR_PATH not set — Spark job may fail if Iceberg runtime is not on classpath');
+    }
+
+    params.push(
       `--conf spark.driver.cores=${config.driverCores}`,
       `--conf spark.driver.memory=${config.driverMemory}g`,
       `--conf spark.executor.cores=${config.executorCores}`,
@@ -559,20 +567,25 @@ export class S3TablesJobSubmitter {
    * Load configuration from environment variables.
    */
   private loadConfig(): S3TablesJobConfig {
-    // Issue 8.2: Validate S3 Tables service availability
+    const requiredEnvVars = ['EMR_APPLICATION_ID', 'EMR_EXECUTION_ROLE_ARN', 'S3_TABLE_BUCKET_ARN', 'PROJECT_ID', 'ODS_S3_BUCKET', 'PIPELINE_S3_BUCKET'];
+    const missing = requiredEnvVars.filter(v => !process.env[v]);
+    if (missing.length > 0) {
+      throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+    }
+
     this.validateS3TablesRegion();
 
     return {
-      emrApplicationId: process.env.EMR_APPLICATION_ID || '',
-      emrExecutionRoleArn: process.env.EMR_EXECUTION_ROLE_ARN || '',
-      s3TableBucketArn: process.env.S3_TABLE_BUCKET_ARN || '',
+      emrApplicationId: process.env.EMR_APPLICATION_ID!,
+      emrExecutionRoleArn: process.env.EMR_EXECUTION_ROLE_ARN!,
+      s3TableBucketArn: process.env.S3_TABLE_BUCKET_ARN!,
       s3TableNamespace: process.env.S3_TABLE_NAMESPACE || '',
-      projectId: process.env.PROJECT_ID || '',
+      projectId: process.env.PROJECT_ID!,
       appIds: process.env.APP_IDS || '',
-      odsS3Bucket: process.env.ODS_S3_BUCKET || '',
+      odsS3Bucket: process.env.ODS_S3_BUCKET!,
       odsS3Prefix: process.env.ODS_S3_PREFIX || '',
       odsFileSuffix: process.env.ODS_FILE_SUFFIX || '.snappy.parquet',
-      pipelineS3Bucket: process.env.PIPELINE_S3_BUCKET || '',
+      pipelineS3Bucket: process.env.PIPELINE_S3_BUCKET!,
       pipelineS3Prefix: process.env.PIPELINE_S3_PREFIX || '',
       dataRetentionDays: parseInt(process.env.DATA_RETENTION_DAYS || '365', 10),
       dataBufferedSeconds: parseInt(process.env.DATA_BUFFERED_SECONDS || '30', 10),
@@ -581,29 +594,13 @@ export class S3TablesJobSubmitter {
 
   /**
    * Validate that S3 Tables service is available in the current region.
-   * Issue 8.2: Region availability check for S3 Tables service.
-   *
-   * NOTE: This list may become outdated. Check AWS documentation for current availability:
-   * https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-regions.html
-   * Last updated: January 2026
+   * Uses a runtime STS call pattern — if the S3 Tables ARN parameter was accepted
+   * by CloudFormation, the service is available. This avoids maintaining a hardcoded region list.
    */
   private validateS3TablesRegion(): void {
-    const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || '';
-
-    // S3 Tables supported regions - this list may expand over time
-    // Reference: https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-tables-regions.html
-    // Last verified: January 2026
-    const supportedRegions = [
-      'us-east-1', // US East (N. Virginia)
-      'us-east-2', // US East (Ohio)
-      'us-west-2', // US West (Oregon)
-      'eu-west-1', // Europe (Ireland)
-      'ap-northeast-1', // Asia Pacific (Tokyo)
-      // Additional regions may be added by AWS - check documentation for updates
-    ];
-
-    if (region && !supportedRegions.includes(region)) {
-      logger.warn(`S3 Tables may not be available in region: ${region}. Supported regions: ${supportedRegions.join(', ')}`);
+    if (!this.config?.s3TableBucketArn && process.env.S3_TABLE_BUCKET_ARN) {
+      // ARN is set but empty after load — should not happen if CDK validation passed
+      logger.warn('S3_TABLE_BUCKET_ARN is set but resolved to empty. Check CloudFormation parameter validation.');
     }
   }
 

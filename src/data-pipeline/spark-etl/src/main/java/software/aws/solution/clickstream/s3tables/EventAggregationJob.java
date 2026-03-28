@@ -31,17 +31,13 @@ import static org.apache.spark.sql.functions.when;
  * Aligned with Redshift clickstream_engagement_day_event_view metrics.
  */
 @Slf4j
-public class EventAggregationJob {
+public class EventAggregationJob extends BaseModelingJob {
 
     public static final String EVENT_DAILY_SUMMARY_TABLE = "event_daily_summary";
     public static final String EVENT_HOURLY_SUMMARY_TABLE = "event_hourly_summary";
 
-    private final SparkSession spark;
-    private final S3TablesModelingConfig config;
-
     public EventAggregationJob(final SparkSession spark, final S3TablesModelingConfig config) {
-        this.spark = spark;
-        this.config = config;
+        super(spark, config);
     }
 
     public void run() {
@@ -54,36 +50,6 @@ public class EventAggregationJob {
 
         createDailySummary(eventData);
         createHourlySummary(eventData);
-    }
-
-    Dataset<Row> readOdsEventData() {
-        String odsPath = config.getOdsPath("event_v2");
-        log.info("Reading ODS event data from: {}", odsPath);
-
-        try {
-            java.sql.Timestamp startTs = new java.sql.Timestamp(config.getStartTimestamp());
-            java.sql.Timestamp endTs = new java.sql.Timestamp(config.getEndTimestamp());
-
-            Dataset<Row> eventData = spark.read()
-                .parquet(odsPath)
-                .filter(col("event_timestamp").geq(startTs))
-                .filter(col("event_timestamp").lt(endTs));
-
-            long count = eventData.count();
-            log.info("Read {} events from ODS", count);
-
-            return eventData;
-        } catch (Exception e) {
-            String message = e.getMessage();
-            if (message != null
-                    && (message.contains("Path does not exist")
-                    || message.contains("Unable to infer schema"))) {
-                log.warn("No ODS data found at path: {}. Error: {}", odsPath, message);
-                return spark.emptyDataFrame();
-            }
-            log.error("Failed to read ODS event data from: {}", odsPath, e);
-            throw new RuntimeException("Failed to read ODS event data: " + message, e);
-        }
     }
 
     void createDailySummary(final Dataset<Row> eventData) {

@@ -286,13 +286,7 @@ export class S3TablesModelingService {
    * Get pipeline with S3 Tables configuration
    */
   private async getPipelineWithS3TablesConfig(projectId: string, pipelineId: string): Promise<IPipeline | undefined> {
-    const pipelines = await store.listPipeline(projectId, 'latest', 'asc');
-    if (pipelines.length === 0) {
-      return undefined;
-    }
-
-    const pipeline = pipelines.find(p => p.pipelineId === pipelineId);
-    return pipeline;
+    return store.getPipeline(projectId, pipelineId);
   }
 
   /**
