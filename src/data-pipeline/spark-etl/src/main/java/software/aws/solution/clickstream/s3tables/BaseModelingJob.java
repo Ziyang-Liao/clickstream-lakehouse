@@ -40,8 +40,14 @@ public abstract class BaseModelingJob {
 
     /**
      * Read ODS event_v2 data filtered by the configured time range.
+     * If data was pre-cached by the Runner (as temp view "cached_ods_event_v2"),
+     * reads from cache instead of S3.
      */
     protected Dataset<Row> readOdsEventData() {
+        if (hasCachedView("cached_ods_event_v2")) {
+            log.info("Using cached ODS event_v2 data");
+            return spark.table("cached_ods_event_v2");
+        }
         return readOdsTable("event_v2");
     }
 
@@ -54,14 +60,28 @@ public abstract class BaseModelingJob {
 
     /**
      * Read ODS user_v2 data (no time filter — full snapshot).
+     * If data was pre-cached by the Runner (as temp view "cached_ods_user_v2"),
+     * reads from cache instead of S3.
      */
     protected Dataset<Row> readOdsUserData() {
+        if (hasCachedView("cached_ods_user_v2")) {
+            log.info("Using cached ODS user_v2 data");
+            return spark.table("cached_ods_user_v2");
+        }
         String odsPath = config.getOdsPath("user_v2");
         log.info("Reading ODS user data from: {}", odsPath);
         try {
             return spark.read().parquet(odsPath);
         } catch (Exception e) {
             return handleOdsReadError(odsPath, e);
+        }
+    }
+
+    private boolean hasCachedView(String viewName) {
+        try {
+            return spark.catalog().tableExists(viewName);
+        } catch (Exception e) {
+            return false;
         }
     }
 

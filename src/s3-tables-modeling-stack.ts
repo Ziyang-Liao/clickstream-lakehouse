@@ -13,6 +13,7 @@
 
 import { SolutionInfo } from '@aws/clickstream-base-lib';
 import { Aspects, CfnCondition, CfnOutput, Duration, Fn, Stack, StackProps } from 'aws-cdk-lib';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import { SecurityGroup, SubnetSelection } from 'aws-cdk-lib/aws-ec2';
 import { CfnApplication } from 'aws-cdk-lib/aws-emrserverless';
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events';
@@ -424,6 +425,26 @@ export class S3TablesModelingStack extends Stack {
       value: emrExecutionRole.roleArn,
       description: 'EMR Execution Role ARN',
     }).overrideLogicalId(OUTPUT_S3_TABLES_MODELING_EMR_EXECUTION_ROLE_ARN);
+
+    // CloudWatch Alarm for EMR job failures
+    const jobFailureMetric = new cloudwatch.Metric({
+      namespace: 'AWS/EMRServerless',
+      metricName: 'JobsFailed',
+      dimensionsMap: {
+        ApplicationId: emrApp.attrApplicationId,
+      },
+      statistic: 'Sum',
+      period: Duration.minutes(5),
+    });
+
+    new cloudwatch.Alarm(this, 'EMRJobFailureAlarm', {
+      metric: jobFailureMetric,
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      alarmDescription: `S3 Tables modeling EMR job failed for project ${params.projectIdParam.valueAsString}`,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
 
     // Add IAM role permission boundary aspect
     const { iamRoleBoundaryArnParam } = Parameters.createIAMRolePrefixAndBoundaryParameters(this);

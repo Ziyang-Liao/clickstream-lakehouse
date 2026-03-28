@@ -123,6 +123,7 @@ public class S3TablesModelingRunner {
 
         try {
             runAllJobs();
+            expireOldData();
         } finally {
             cachedEventData.unpersist();
             cachedUserData.unpersist();
@@ -188,6 +189,67 @@ public class S3TablesModelingRunner {
      */
     public S3TablesModelingConfig getConfig() {
         return config;
+    }
+
+    /**
+     * Expire old data from Iceberg tables based on dataRetentionDays config.
+     * Deletes rows with event_date older than the retention period and
+     * expires old Iceberg snapshots to reclaim storage.
+     */
+    private void expireOldData() {
+        int retentionDays = config.getDataRetentionDays();
+        if (retentionDays <= 0) {
+            log.info("Data retention disabled (days={}), skipping", retentionDays);
+            return;
+        }
+
+        log.info("Expiring data older than {} days", retentionDays);
+        String catalogName = config.getCatalogName();
+        String namespace = config.getNamespace();
+
+        // Tables with event_date column for row-level deletion
+        String[] dateTables = {
+            "event_daily_summary", "event_hourly_summary", "session_analysis",
+            "engagement_kpi", "geo_user_summary", "active_user_dau",
+            "active_user_wau", "active_user_mau", "new_return_user",
+            "device_user", "crash_rate", "page_screen_view",
+            "entrance_page", "exit_page", "event_name_user",
+        };
+
+        for (String table : dateTables) {
+            try {
+                String fullTable = String.format("%s.%s.%s", catalogName, namespace, table);
+                String deleteSQL = String.format(
+                    "DELETE FROM %s WHERE event_date < date_sub(current_date(), %d)",
+                    fullTable, retentionDays);
+                spark.sql(deleteSQL);
+                log.info("Expired old data from {}", table);
+            } catch (Exception e) {
+                log.warn("Failed to expire data from {}: {}", table, e.getMessage());
+            }
+        }
+
+        // Expire old Iceberg snapshots (keep last 24 hours of snapshots)
+        String[] allTables = java.util.stream.Stream.concat(
+            java.util.Arrays.stream(dateTables),
+            java.util.stream.Stream.of("user_behavior", "retention_daily", "retention_weekly",
+                "user_acquisition", "lifecycle_weekly")
+        ).toArray(String[]::new);
+
+        for (String table : allTables) {
+            try {
+                String fullTable = String.format("%s.%s.%s", catalogName, namespace, table);
+                String expireSQL = String.format(
+                    "CALL %s.system.expire_snapshots('%s.%s', TIMESTAMP '%s')",
+                    catalogName, namespace, table,
+                    java.time.Instant.now().minus(java.time.Duration.ofHours(24))
+                        .toString().replace("T", " ").replace("Z", ""));
+                spark.sql(expireSQL);
+                log.info("Expired old snapshots from {}", table);
+            } catch (Exception e) {
+                log.warn("Failed to expire snapshots from {}: {}", table, e.getMessage());
+            }
+        }
     }
 
     /**
