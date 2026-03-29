@@ -1,8 +1,46 @@
-# Clickstream Analytics on AWS Guidance
+# Clickstream Analytics on AWS — Enhanced Edition
 
-## 新增功能与改进
+[![Version](https://img.shields.io/badge/version-v1.2.1-blue.svg)](CHANGELOG.md)
+[![Upstream](https://img.shields.io/badge/upstream-aws--solutions%2Fclickstream--analytics--on--aws-orange.svg)](https://github.com/aws-solutions/clickstream-analytics-on-aws)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green.svg)](LICENSE)
 
-基于 [aws-solutions/clickstream-analytics-on-aws](https://github.com/aws-solutions/clickstream-analytics-on-aws) 进行了以下功能扩展和 bug 修复。
+基于 [aws-solutions/clickstream-analytics-on-aws](https://github.com/aws-solutions/clickstream-analytics-on-aws) (v1.1.6) 的增强版本。
+
+## 与上游版本的区别
+
+| 能力 | 上游版本 (aws-solutions) | 本增强版 |
+|------|------------------------|---------|
+| 数据建模 | 仅 Redshift | Redshift **+ S3 Tables (EMR Serverless + Iceberg)** |
+| 建模 Job | Redshift 存储过程 | 新增 15 个 Spark Job（EMR Serverless） |
+| 字段过滤 | ❌ | ✅ 白名单/黑名单，Web 控制台配置 |
+| 指标目录 | ❌ | ✅ 23 个内置指标，含口径定义和数据来源 |
+| 数据血缘 | ❌ | ✅ 表级 + 字段级血缘，影响分析 |
+| 跨区域同步 | ❌ | ✅ Data Sync Module |
+| 部署方式 | 手动多步 | **一键部署** `solution-deploy.sh` |
+
+## 数据架构
+
+系统支持两条互斥的数据建模路径，通过 Pipeline 创建向导选择：
+
+```
+                                    ┌─ Path A: S3 Tables ─────────────────────────┐
+                                    │  15 Spark Jobs (EMR Serverless 7.5+)        │
+SDK → Ingestion → S3 Buffer        │  → S3 Tables (Apache Iceberg)               │
+      (ECS ALB)    │                │  → Athena 即席查询                           │
+                   ↓                ├─────────────────────────────────────────────┤
+              EMR Spark ETL         │  Path B: Redshift                           │
+              (TransformerV3        │  → Redshift base views (event_base_view)    │
+               + UA Enrichment     │  → 17 Stored Procedures → Materialized Views│
+               + IP Enrichment)    │  → QuickSight Dashboard                     │
+                   ↓                └─────────────────────────────────────────────┘
+              ODS 层 (Glue Catalog)
+              ├── event_v2 (148 字段)
+              ├── user_v2
+              ├── session
+              └── item_v2
+```
+
+## 新增功能详情
 
 ### 功能一：EMR Serverless + S3 Tables 数据建模
 
@@ -58,6 +96,67 @@
 | Bug | 修复 |
 |-----|------|
 | Workflow 中 Redshift 和 S3 Tables 互斥无防御检查 | 重构为 if/else if 互斥分支，两者同时存在时防御性降级 |
+| S3 模板桶名全局冲突导致跨账号部署 Access Denied | 构建时动态生成唯一桶名，使用 `__DIST_OUTPUT_BUCKET__` 占位符 |
+| ECR 镜像引用硬编码外部账号 | 构建时通过 `%%SOLUTION_ECR_ACCOUNT%%` 替换为部署者账号 |
+
+### 功能四：指标目录 (Metric Catalog) `v1.3.0-dev`
+
+提供 23 个内置指标的统一查询入口，覆盖 10 个分析维度。
+
+- **用户规模**：DAU / WAU / MAU / 新用户数 / 回访用户数
+- **留存**：日留存率 / 周留存率
+- **参与度**：平均会话时长 / 人均会话数 / 人均参与时长 / 跳出率
+- **事件**：日事件总量 / 事件名分布
+- **页面**：页面浏览量 / 入口页 / 退出页
+- **设备**：设备分布 / 崩溃率
+- **地理 / 获客 / 生命周期 / 用户价值**
+
+每个指标包含：
+- 业务含义（中英文）和计算口径（SQL 公式）
+- 数据来源：ODS 依赖字段 → Spark Job / Redshift SP → 输出表/视图
+- 双计算路径标注：S3 Tables 路径 (EMR Serverless) 和 Redshift 路径
+- 更新频率和关联的 QuickSight 报表
+
+**API 端点：**
+- `GET /api/metrics/catalog` — 指标列表（支持 `?category=` 过滤）
+- `GET /api/metrics/catalog/:metricId` — 指标详情
+
+**相关代码：**
+- 配置: `src/control-plane/backend/lambda/api/config/metrics-catalog.json`
+- API: `src/control-plane/backend/lambda/api/router/metrics.ts`
+- 前端: `frontend/src/pages/pipelines/detail/comps/MetricsCatalog.tsx`
+
+### 功能五：数据血缘 (Data Lineage) `v1.3.0-dev`
+
+提供从 SDK 采集到最终报表的完整数据血缘追踪，支持三个维度：
+
+**1. 表级血缘 DAG**
+- 6 层可视化：采集层 → 接入层 → ETL 层 → ODS 层 → 建模层 → 消费层
+- 48 个节点，77 条边
+- 按建模路径过滤：S3 Tables / Redshift / 全部
+
+**2. 字段级血缘**
+- 13 个关键 ODS 字段的完整上下游追踪
+- 上游：字段从哪里来（SDK 原始字段 → ETL 转换逻辑）
+- 下游：字段流向哪里（建模 Job 的计算逻辑 → 输出表字段）
+
+**3. 影响分析**
+- 选中任意字段，展示其影响范围：
+  - S3 Tables 路径：影响的 Spark Job → Iceberg 表 → Athena 查询
+  - Redshift 路径：影响的存储过程/视图 → QuickSight 报表
+- 示例：`user_pseudo_id` 影响 12 个 Job、14 张表、7 个视图、7 个报表
+
+**API 端点：**
+- `GET /api/lineage/graph?path=s3tables|redshift|both` — 表级 DAG
+- `GET /api/lineage/field/:table/:field` — 字段级血缘
+- `GET /api/lineage/impact/:table/:field` — 字段影响分析
+- `GET /api/lineage/impact/:table` — 表级影响分析
+
+**相关代码：**
+- 配置: `src/control-plane/backend/lambda/api/config/lineage-graph.json`
+- API: `src/control-plane/backend/lambda/api/router/lineage.ts`
+- 前端: `frontend/src/pages/pipelines/detail/comps/Lineage.tsx`
+- 设计文档: `.kiro/specs/lineage-and-metrics/design.md`
 | S3 Tables 模式下 Reporting stack 不会被挂载 | Reporting 现在正确跟随任一建模 stack |
 | PIPELINE_ID 回退到 projectId 导致字段过滤规则查不到 | 移除错误 fallback，缺失时跳过并输出警告 |
 | API 和 Lambda 的 S3 prefix 路径不一致导致作业历史查不到 | 统一使用 `getBucketPrefix()` |
