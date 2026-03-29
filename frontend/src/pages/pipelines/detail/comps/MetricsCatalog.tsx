@@ -201,6 +201,21 @@ const MetricsCatalog: React.FC<TabContentProps> = () => {
                         <Box><Link>{item.reportSheet}</Link></Box>
                       </div>
                     )}
+                    <div>
+                      <Box variant="awsui-key-label">{isZh ? '计算路径' : 'Compute Paths'}</Box>
+                      <SpaceBetween direction="vertical" size="xxs">
+                        <Box>
+                          <Badge color="blue">S3 Tables</Badge>{' '}
+                          EMR Serverless (Spark) → S3 Tables (Iceberg) → Athena
+                        </Box>
+                        {item.redshiftView && (
+                          <Box>
+                            <Badge color="red">Redshift</Badge>{' '}
+                            Redshift SP ({item.redshiftView}) → QuickSight
+                          </Box>
+                        )}
+                      </SpaceBetween>
+                    </div>
                   </ColumnLayout>
                 </ExpandableSection>
               ),

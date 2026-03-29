@@ -1,16 +1,66 @@
 {
   "version": "1.0.0",
   "categories": [
-    {"id": "user_scale", "name": "User Scale", "nameZh": "用户规模", "icon": "user"},
-    {"id": "retention", "name": "Retention", "nameZh": "留存", "icon": "refresh"},
-    {"id": "engagement", "name": "Engagement", "nameZh": "参与度", "icon": "heart"},
-    {"id": "event", "name": "Event", "nameZh": "事件", "icon": "click"},
-    {"id": "page", "name": "Page & Screen", "nameZh": "页面与屏幕", "icon": "file"},
-    {"id": "device", "name": "Device", "nameZh": "设备", "icon": "mobile"},
-    {"id": "geo", "name": "Geography", "nameZh": "地理", "icon": "globe"},
-    {"id": "acquisition", "name": "Acquisition", "nameZh": "获客", "icon": "funnel"},
-    {"id": "lifecycle", "name": "Lifecycle", "nameZh": "生命周期", "icon": "cycle"},
-    {"id": "user_value", "name": "User Value", "nameZh": "用户价值", "icon": "dollar"}
+    {
+      "id": "user_scale",
+      "name": "User Scale",
+      "nameZh": "用户规模",
+      "icon": "user"
+    },
+    {
+      "id": "retention",
+      "name": "Retention",
+      "nameZh": "留存",
+      "icon": "refresh"
+    },
+    {
+      "id": "engagement",
+      "name": "Engagement",
+      "nameZh": "参与度",
+      "icon": "heart"
+    },
+    {
+      "id": "event",
+      "name": "Event",
+      "nameZh": "事件",
+      "icon": "click"
+    },
+    {
+      "id": "page",
+      "name": "Page & Screen",
+      "nameZh": "页面与屏幕",
+      "icon": "file"
+    },
+    {
+      "id": "device",
+      "name": "Device",
+      "nameZh": "设备",
+      "icon": "mobile"
+    },
+    {
+      "id": "geo",
+      "name": "Geography",
+      "nameZh": "地理",
+      "icon": "globe"
+    },
+    {
+      "id": "acquisition",
+      "name": "Acquisition",
+      "nameZh": "获客",
+      "icon": "funnel"
+    },
+    {
+      "id": "lifecycle",
+      "name": "Lifecycle",
+      "nameZh": "生命周期",
+      "icon": "cycle"
+    },
+    {
+      "id": "user_value",
+      "name": "User Value",
+      "nameZh": "用户价值",
+      "icon": "dollar"
+    }
   ],
   "metrics": [
     {
@@ -23,11 +73,25 @@
       "formula": "COUNT(DISTINCT user_pseudo_id) WHERE DATE(event_timestamp) = target_date",
       "sourceJob": "ActiveUserJob",
       "sourceTable": "dau",
-      "sourceFields": ["event_timestamp", "user_pseudo_id", "platform", "app_id"],
+      "sourceFields": [
+        "event_timestamp",
+        "user_pseudo_id",
+        "platform",
+        "app_id"
+      ],
       "outputField": "dau",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_retention_dau_wau_sp",
-      "reportSheet": "Retention Dashboard"
+      "reportSheet": "Retention Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_retention_dau_wau_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "wau",
@@ -39,11 +103,25 @@
       "formula": "COUNT(DISTINCT user_pseudo_id) WHERE WEEK(event_timestamp) = target_week",
       "sourceJob": "ActiveUserJob",
       "sourceTable": "dau",
-      "sourceFields": ["event_timestamp", "user_pseudo_id", "platform", "app_id"],
+      "sourceFields": [
+        "event_timestamp",
+        "user_pseudo_id",
+        "platform",
+        "app_id"
+      ],
       "outputField": "wau",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_retention_dau_wau_sp",
-      "reportSheet": "Retention Dashboard"
+      "reportSheet": "Retention Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_retention_dau_wau_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "mau",
@@ -55,11 +133,25 @@
       "formula": "COUNT(DISTINCT user_pseudo_id) WHERE MONTH(event_timestamp) = target_month",
       "sourceJob": "ActiveUserJob",
       "sourceTable": "dau",
-      "sourceFields": ["event_timestamp", "user_pseudo_id", "platform", "app_id"],
+      "sourceFields": [
+        "event_timestamp",
+        "user_pseudo_id",
+        "platform",
+        "app_id"
+      ],
       "outputField": "mau",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_retention_dau_wau_sp",
-      "reportSheet": "Retention Dashboard"
+      "reportSheet": "Retention Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_retention_dau_wau_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "new_users",
@@ -71,11 +163,25 @@
       "formula": "COUNT(DISTINCT user_pseudo_id) WHERE event_name = '_first_open'",
       "sourceJob": "NewReturnUserJob",
       "sourceTable": "new_return_user",
-      "sourceFields": ["event_name", "user_pseudo_id", "first_touch_time_msec", "event_timestamp"],
+      "sourceFields": [
+        "event_name",
+        "user_pseudo_id",
+        "first_touch_time_msec",
+        "event_timestamp"
+      ],
       "outputField": "user_count WHERE user_type = 'new'",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_acquisition_country_new_user_sp",
-      "reportSheet": "Acquisition Dashboard"
+      "reportSheet": "Acquisition Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_acquisition_country_new_user_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "return_users",
@@ -87,11 +193,25 @@
       "formula": "COUNT(DISTINCT user_pseudo_id) WHERE is_new = false",
       "sourceJob": "NewReturnUserJob",
       "sourceTable": "new_return_user",
-      "sourceFields": ["event_name", "user_pseudo_id", "first_touch_time_msec", "event_timestamp"],
+      "sourceFields": [
+        "event_name",
+        "user_pseudo_id",
+        "first_touch_time_msec",
+        "event_timestamp"
+      ],
       "outputField": "user_count WHERE user_type = 'return'",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_acquisition_country_new_user_sp",
-      "reportSheet": "Acquisition Dashboard"
+      "reportSheet": "Acquisition Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_acquisition_country_new_user_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "daily_retention",
@@ -103,11 +223,26 @@
       "formula": "COUNT(DISTINCT retained_users_day_N) / COUNT(DISTINCT cohort_users)",
       "sourceJob": "RetentionAnalysisJob",
       "sourceTable": "retention_daily",
-      "sourceFields": ["event_timestamp", "user_pseudo_id", "first_touch_time_msec", "platform", "app_id"],
+      "sourceFields": [
+        "event_timestamp",
+        "user_pseudo_id",
+        "first_touch_time_msec",
+        "platform",
+        "app_id"
+      ],
       "outputField": "retention_rate",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_retention_view_sp",
-      "reportSheet": "Retention Dashboard"
+      "reportSheet": "Retention Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_retention_view_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "weekly_retention",
@@ -119,11 +254,26 @@
       "formula": "COUNT(DISTINCT retained_users_week_N) / COUNT(DISTINCT cohort_users)",
       "sourceJob": "RetentionAnalysisJob",
       "sourceTable": "retention_weekly",
-      "sourceFields": ["event_timestamp", "user_pseudo_id", "first_touch_time_msec", "platform", "app_id"],
+      "sourceFields": [
+        "event_timestamp",
+        "user_pseudo_id",
+        "first_touch_time_msec",
+        "platform",
+        "app_id"
+      ],
       "outputField": "retention_rate",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_retention_view_sp",
-      "reportSheet": "Retention Dashboard"
+      "reportSheet": "Retention Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_retention_view_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "avg_session_duration",
@@ -135,11 +285,26 @@
       "formula": "SUM(session_duration) / COUNT(engaged_sessions)",
       "sourceJob": "EngagementKpiJob",
       "sourceTable": "engagement_kpi",
-      "sourceFields": ["session_id", "user_engagement_time_msec", "event_name", "event_timestamp", "user_pseudo_id"],
+      "sourceFields": [
+        "session_id",
+        "user_engagement_time_msec",
+        "event_name",
+        "event_timestamp",
+        "user_pseudo_id"
+      ],
       "outputField": "avg_engagement_time_per_session_seconds",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_engagement_kpi_sp",
-      "reportSheet": "Engagement Dashboard"
+      "reportSheet": "Engagement Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_engagement_kpi_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "sessions_per_user",
@@ -151,11 +316,25 @@
       "formula": "COUNT(engaged_sessions) / COUNT(DISTINCT user_pseudo_id)",
       "sourceJob": "EngagementKpiJob",
       "sourceTable": "engagement_kpi",
-      "sourceFields": ["session_id", "user_pseudo_id", "event_name", "event_timestamp"],
+      "sourceFields": [
+        "session_id",
+        "user_pseudo_id",
+        "event_name",
+        "event_timestamp"
+      ],
       "outputField": "avg_engaged_session_per_user",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_engagement_kpi_sp",
-      "reportSheet": "Engagement Dashboard"
+      "reportSheet": "Engagement Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_engagement_kpi_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "engagement_time_per_user",
@@ -167,11 +346,24 @@
       "formula": "SUM(user_engagement_time_msec) / 1000 / COUNT(DISTINCT user_pseudo_id)",
       "sourceJob": "EngagementKpiJob",
       "sourceTable": "engagement_kpi",
-      "sourceFields": ["user_engagement_time_msec", "user_pseudo_id", "event_timestamp"],
+      "sourceFields": [
+        "user_engagement_time_msec",
+        "user_pseudo_id",
+        "event_timestamp"
+      ],
       "outputField": "avg_engagement_time_per_user_seconds",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_engagement_kpi_sp",
-      "reportSheet": "Engagement Dashboard"
+      "reportSheet": "Engagement Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_engagement_kpi_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "bounce_rate",
@@ -183,11 +375,25 @@
       "formula": "COUNT(sessions WHERE view_count <= 1) / COUNT(total_sessions)",
       "sourceJob": "SessionAnalysisJob",
       "sourceTable": "session_analysis",
-      "sourceFields": ["session_id", "event_name", "event_timestamp", "user_pseudo_id"],
+      "sourceFields": [
+        "session_id",
+        "event_name",
+        "event_timestamp",
+        "user_pseudo_id"
+      ],
       "outputField": "bounce_flag",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_engagement_kpi_sp",
-      "reportSheet": "Engagement Dashboard"
+      "reportSheet": "Engagement Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_engagement_kpi_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "daily_events",
@@ -199,11 +405,26 @@
       "formula": "COUNT(event_id) GROUP BY event_date",
       "sourceJob": "EventAggregationJob",
       "sourceTable": "event_daily_summary",
-      "sourceFields": ["event_id", "event_timestamp", "event_name", "platform", "app_id"],
+      "sourceFields": [
+        "event_id",
+        "event_timestamp",
+        "event_name",
+        "platform",
+        "app_id"
+      ],
       "outputField": "event_count",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_engagement_day_event_view_sp",
-      "reportSheet": "Event Dashboard"
+      "reportSheet": "Event Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_engagement_day_event_view_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "event_name_distribution",
@@ -215,11 +436,26 @@
       "formula": "COUNT(event_id), SUM(event_value) GROUP BY event_name",
       "sourceJob": "EventNameJob",
       "sourceTable": "event_name",
-      "sourceFields": ["event_id", "event_name", "event_value", "event_timestamp", "user_pseudo_id"],
+      "sourceFields": [
+        "event_id",
+        "event_name",
+        "event_value",
+        "event_timestamp",
+        "user_pseudo_id"
+      ],
       "outputField": "event_count, event_value",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_engagement_event_name_sp",
-      "reportSheet": "Event Dashboard"
+      "reportSheet": "Event Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_engagement_event_name_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "page_views",
@@ -231,11 +467,26 @@
       "formula": "COUNT(event_id) WHERE event_name IN ('_page_view', '_screen_view') GROUP BY page_url_path",
       "sourceJob": "PageScreenViewJob",
       "sourceTable": "page_screen_view",
-      "sourceFields": ["event_name", "page_view_page_url_path", "page_view_page_title", "screen_view_screen_name", "screen_view_screen_id"],
+      "sourceFields": [
+        "event_name",
+        "page_view_page_url_path",
+        "page_view_page_title",
+        "screen_view_screen_name",
+        "screen_view_screen_id"
+      ],
       "outputField": "view_count",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_engagement_page_screen_view_sp",
-      "reportSheet": "Page View Dashboard"
+      "reportSheet": "Page View Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_engagement_page_screen_view_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "entrance_pages",
@@ -247,11 +498,26 @@
       "formula": "COUNT(entrance) GROUP BY page_url_path WHERE page_view_entrances = true",
       "sourceJob": "EntranceExitJob",
       "sourceTable": "entrance",
-      "sourceFields": ["session_id", "event_name", "page_view_page_url_path", "page_view_entrances", "page_view_page_title"],
+      "sourceFields": [
+        "session_id",
+        "event_name",
+        "page_view_page_url_path",
+        "page_view_entrances",
+        "page_view_page_title"
+      ],
       "outputField": "entrance_count",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_engagement_entrance_sp",
-      "reportSheet": "Entrance Dashboard"
+      "reportSheet": "Entrance Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_engagement_entrance_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "exit_pages",
@@ -263,11 +529,25 @@
       "formula": "COUNT(exit) GROUP BY page_url_path (last page_view per session)",
       "sourceJob": "EntranceExitJob",
       "sourceTable": "exit",
-      "sourceFields": ["session_id", "event_name", "page_view_page_url_path", "page_view_page_title"],
+      "sourceFields": [
+        "session_id",
+        "event_name",
+        "page_view_page_url_path",
+        "page_view_page_title"
+      ],
       "outputField": "exit_count",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_engagement_exit_sp",
-      "reportSheet": "Exit Dashboard"
+      "reportSheet": "Exit Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_engagement_exit_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "device_distribution",
@@ -279,11 +559,29 @@
       "formula": "COUNT(event_id) GROUP BY device_mobile_model_name, device_operating_system, device_ua_browser",
       "sourceJob": "DeviceJob",
       "sourceTable": "device",
-      "sourceFields": ["device_mobile_model_name", "device_operating_system", "device_operating_system_version", "device_ua_browser", "device_ua_device", "device_ua_device_category", "device_screen_width", "device_screen_height"],
+      "sourceFields": [
+        "device_mobile_model_name",
+        "device_operating_system",
+        "device_operating_system_version",
+        "device_ua_browser",
+        "device_ua_device",
+        "device_ua_device_category",
+        "device_screen_width",
+        "device_screen_height"
+      ],
       "outputField": "event_count",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_device_user_device_sp",
-      "reportSheet": "Device Dashboard"
+      "reportSheet": "Device Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_device_user_device_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "crash_rate",
@@ -295,11 +593,26 @@
       "formula": "COUNT(DISTINCT crashed_user_id) / COUNT(DISTINCT user_pseudo_id)",
       "sourceJob": "CrashRateJob",
       "sourceTable": "crash_rate",
-      "sourceFields": ["event_name", "user_pseudo_id", "app_version", "platform", "event_timestamp"],
+      "sourceFields": [
+        "event_name",
+        "user_pseudo_id",
+        "app_version",
+        "platform",
+        "event_timestamp"
+      ],
       "outputField": "crash_rate",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_device_crash_rate_sp",
-      "reportSheet": "Crash Dashboard"
+      "reportSheet": "Crash Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_device_crash_rate_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "geo_user_distribution",
@@ -311,11 +624,26 @@
       "formula": "COUNT(DISTINCT user_pseudo_id) GROUP BY geo_country, geo_city",
       "sourceJob": "GeoUserJob",
       "sourceTable": "geo_user",
-      "sourceFields": ["geo_country", "geo_city", "user_pseudo_id", "event_name", "event_timestamp"],
+      "sourceFields": [
+        "geo_country",
+        "geo_city",
+        "user_pseudo_id",
+        "event_name",
+        "event_timestamp"
+      ],
       "outputField": "user_count",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_acquisition_country_new_user_sp",
-      "reportSheet": "Geo Dashboard"
+      "reportSheet": "Geo Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_acquisition_country_new_user_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "channel_acquisition",
@@ -327,11 +655,30 @@
       "formula": "COUNT(DISTINCT new_users), SUM(sessions), SUM(engagement_time) GROUP BY traffic_source",
       "sourceJob": "UserAcquisitionJob",
       "sourceTable": "user_acquisition",
-      "sourceFields": ["traffic_source_source", "traffic_source_medium", "traffic_source_campaign", "traffic_source_channel_group", "first_traffic_source", "first_traffic_medium", "user_pseudo_id", "session_id", "user_engagement_time_msec"],
+      "sourceFields": [
+        "traffic_source_source",
+        "traffic_source_medium",
+        "traffic_source_campaign",
+        "traffic_source_channel_group",
+        "first_traffic_source",
+        "first_traffic_medium",
+        "user_pseudo_id",
+        "session_id",
+        "user_engagement_time_msec"
+      ],
       "outputField": "new_user_count, session_count, engagement_rate",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_acquisition_day_traffic_source_user_sp",
-      "reportSheet": "Traffic Source Dashboard"
+      "reportSheet": "Traffic Source Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_acquisition_day_traffic_source_user_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "lifecycle_weekly",
@@ -343,11 +690,26 @@
       "formula": "Classify users by weekly activity pattern into new/active/return/dormant",
       "sourceJob": "LifecycleJob",
       "sourceTable": "lifecycle_weekly",
-      "sourceFields": ["event_name", "user_pseudo_id", "event_timestamp", "platform", "app_id"],
+      "sourceFields": [
+        "event_name",
+        "user_pseudo_id",
+        "event_timestamp",
+        "platform",
+        "app_id"
+      ],
       "outputField": "user_count per lifecycle stage",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": "clickstream_lifecycle_weekly_view_sp",
-      "reportSheet": "Lifecycle Dashboard"
+      "reportSheet": "Lifecycle Dashboard",
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)",
+      "redshiftModelingPath": {
+        "computeEngine": "Redshift Serverless",
+        "storageFormat": "Redshift Materialized View",
+        "storedProcedure": "clickstream_lifecycle_weekly_view_sp",
+        "sourceView": "clickstream_event_base_view (from event_v2 + session + user_v2)"
+      }
     },
     {
       "id": "ltv",
@@ -359,11 +721,18 @@
       "formula": "SUM(event_value) GROUP BY user_pseudo_id",
       "sourceJob": "UserBehaviorJob",
       "sourceTable": "user_behavior",
-      "sourceFields": ["event_value", "user_pseudo_id", "event_timestamp"],
+      "sourceFields": [
+        "event_value",
+        "user_pseudo_id",
+        "event_timestamp"
+      ],
       "outputField": "ltv",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": null,
-      "reportSheet": null
+      "reportSheet": null,
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)"
     },
     {
       "id": "events_per_user",
@@ -375,11 +744,18 @@
       "formula": "COUNT(events) GROUP BY user_pseudo_id",
       "sourceJob": "UserBehaviorJob",
       "sourceTable": "user_behavior",
-      "sourceFields": ["event_id", "user_pseudo_id", "event_timestamp"],
+      "sourceFields": [
+        "event_id",
+        "user_pseudo_id",
+        "event_timestamp"
+      ],
       "outputField": "total_events",
       "schedule": "cron(0 2 * * ? *)",
       "redshiftView": null,
-      "reportSheet": null
+      "reportSheet": null,
+      "modelingPath": "s3tables",
+      "computeEngine": "EMR Serverless (Spark)",
+      "storageFormat": "S3 Tables (Apache Iceberg)"
     }
   ]
 }

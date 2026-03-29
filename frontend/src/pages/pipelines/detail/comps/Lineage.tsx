@@ -230,24 +230,45 @@ const Lineage: React.FC<TabContentProps> = () => {
             {impact && (
               <div>
                 <Box variant="h4">{isZh ? '影响分析' : 'Impact Analysis'}</Box>
-                <ColumnLayout columns={4} variant="text-grid">
-                  <div>
-                    <Box variant="awsui-key-label">{isZh ? '影响的 Job' : 'Affected Jobs'} ({impact.jobs.length})</Box>
-                    {impact.jobs.map(j => <div key={j}><StatusIndicator type="info">{j}</StatusIndicator></div>)}
-                  </div>
-                  <div>
-                    <Box variant="awsui-key-label">{isZh ? '影响的建模表' : 'Affected Tables'} ({impact.tables.length})</Box>
-                    {impact.tables.map(t => <div key={t}><code>{t}</code></div>)}
-                  </div>
-                  <div>
-                    <Box variant="awsui-key-label">{isZh ? '影响的视图' : 'Affected Views'} ({impact.views.length})</Box>
-                    {impact.views.map(v => <div key={v}><code style={{ fontSize: 11 }}>{v}</code></div>)}
-                  </div>
-                  <div>
-                    <Box variant="awsui-key-label">{isZh ? '影响的报表' : 'Affected Reports'} ({impact.reports.length})</Box>
-                    {impact.reports.map(r => <div key={r}><StatusIndicator type="warning">{r}</StatusIndicator></div>)}
-                  </div>
-                </ColumnLayout>
+                <SpaceBetween direction="vertical" size="m">
+                  {/* S3 Tables Path */}
+                  <Container header={<Header variant="h4">
+                    <Badge color="blue">S3 Tables</Badge> {isZh ? '路径 (EMR Serverless + Iceberg)' : 'Path (EMR Serverless + Iceberg)'}
+                  </Header>}>
+                    <ColumnLayout columns={2} variant="text-grid">
+                      <div>
+                        <Box variant="awsui-key-label">{isZh ? '影响的 Spark Job' : 'Affected Spark Jobs'} ({impact.jobs.length})</Box>
+                        {impact.jobs.map((j: string) => <div key={j}><StatusIndicator type="info">{j}</StatusIndicator></div>)}
+                      </div>
+                      <div>
+                        <Box variant="awsui-key-label">{isZh ? '影响的 Iceberg 表' : 'Affected Iceberg Tables'} ({impact.tables.length})</Box>
+                        {impact.tables.map((t: string) => <div key={t}><code>{t}</code></div>)}
+                      </div>
+                    </ColumnLayout>
+                    <Box margin={{ top: 's' }} color="text-body-secondary">
+                      {isZh ? '消费方式: Athena 即席查询' : 'Consumption: Athena ad-hoc query'}
+                    </Box>
+                  </Container>
+
+                  {/* Redshift Path */}
+                  <Container header={<Header variant="h4">
+                    <Badge color="red">Redshift</Badge> {isZh ? '路径 (Redshift Serverless + QuickSight)' : 'Path (Redshift Serverless + QuickSight)'}
+                  </Header>}>
+                    <ColumnLayout columns={2} variant="text-grid">
+                      <div>
+                        <Box variant="awsui-key-label">{isZh ? '影响的存储过程/视图' : 'Affected Views/SPs'} ({impact.views.length})</Box>
+                        {impact.views.map((v: string) => <div key={v}><code style={{ fontSize: 11 }}>{v}</code></div>)}
+                      </div>
+                      <div>
+                        <Box variant="awsui-key-label">{isZh ? '影响的 QuickSight 报表' : 'Affected QuickSight Reports'} ({impact.reports.length})</Box>
+                        {impact.reports.map((r: string) => <div key={r}><StatusIndicator type="warning">{r}</StatusIndicator></div>)}
+                      </div>
+                    </ColumnLayout>
+                    <Box margin={{ top: 's' }} color="text-body-secondary">
+                      {isZh ? '消费方式: QuickSight Dashboard' : 'Consumption: QuickSight Dashboard'}
+                    </Box>
+                  </Container>
+                </SpaceBetween>
               </div>
             )}
           </SpaceBetween>

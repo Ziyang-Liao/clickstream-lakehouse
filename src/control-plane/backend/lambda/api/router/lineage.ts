@@ -12,23 +12,35 @@
  */
 
 import express from 'express';
-import { param } from 'express-validator';
+import { param, query } from 'express-validator';
 import { validate } from '../common/request-valid';
 import lineageGraph from '../config/lineage-graph.json';
 
 const router_lineage: express.Router = express.Router();
 
-// GET /api/lineage/graph — full table-level DAG
+type ModelingPath = 's3tables' | 'redshift' | 'both';
+
+function filterByPath(items: any[], path?: ModelingPath) {
+  if (!path || path === 'both') return items;
+  return items.filter((item: any) => !item.modelingPath || item.modelingPath === path || item.modelingPath === 'both');
+}
+
+// GET /api/lineage/graph?path=s3tables|redshift — table-level DAG filtered by modeling path
 router_lineage.get(
   '/graph',
+  validate([query('path').optional().isIn(['s3tables', 'redshift', 'both'])]),
   async (_req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
+      const path = (_req.query.path as ModelingPath) || 'both';
+      const nodes = filterByPath(lineageGraph.nodes, path);
+      const nodeIds = new Set(nodes.map((n: any) => n.id));
+      const edges = lineageGraph.edges.filter((e: any) =>
+        nodeIds.has(e.source) && nodeIds.has(e.target) &&
+        (!e.modelingPath || e.modelingPath === path || path === 'both'),
+      );
       res.json({
         success: true,
-        data: {
-          nodes: lineageGraph.nodes,
-          edges: lineageGraph.edges,
-        },
+        data: { nodes, edges, modelingPath: path },
       });
     } catch (err) {
       next(err);
@@ -36,13 +48,10 @@ router_lineage.get(
   },
 );
 
-// GET /api/lineage/field/:table/:field — field-level lineage (upstream + downstream)
+// GET /api/lineage/field/:table/:field — field-level lineage
 router_lineage.get(
   '/field/:table/:field',
-  validate([
-    param('table').isString(),
-    param('field').isString(),
-  ]),
+  validate([param('table').isString(), param('field').isString()]),
   async (_req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
       const key = `${_req.params.table}.${_req.params.field}`;
@@ -57,13 +66,10 @@ router_lineage.get(
   },
 );
 
-// GET /api/lineage/impact/:table/:field — impact analysis for a field
+// GET /api/lineage/impact/:table/:field — impact analysis with dual-path breakdown
 router_lineage.get(
   '/impact/:table/:field',
-  validate([
-    param('table').isString(),
-    param('field').isString(),
-  ]),
+  validate([param('table').isString(), param('field').isString()]),
   async (_req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
       const key = `${_req.params.table}.${_req.params.field}`;
@@ -78,16 +84,13 @@ router_lineage.get(
   },
 );
 
-// GET /api/lineage/impact/:table — impact analysis for a table
+// GET /api/lineage/impact/:table — table-level impact aggregation
 router_lineage.get(
   '/impact/:table',
-  validate([
-    param('table').isString(),
-  ]),
+  validate([param('table').isString()]),
   async (_req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
       const tableName = _req.params.table;
-      // Aggregate impact across all fields of this table
       const fieldKeys = Object.keys(lineageGraph.impactAnalysis)
         .filter(k => k.startsWith(`${tableName}.`));
       if (fieldKeys.length === 0) {
@@ -108,10 +111,8 @@ router_lineage.get(
         success: true,
         data: {
           table: tableName,
-          jobs: [...jobs],
-          tables: [...tables],
-          views: [...views],
-          reports: [...reports],
+          s3tablesPath: { jobs: [...jobs], tables: [...tables], computeEngine: 'EMR Serverless', consumption: 'Athena' },
+          redshiftPath: { views: [...views], reports: [...reports], computeEngine: 'Redshift Serverless', consumption: 'QuickSight' },
         },
       });
     } catch (err) {
