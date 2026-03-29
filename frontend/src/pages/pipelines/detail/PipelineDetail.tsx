@@ -31,6 +31,8 @@ import { defaultStr } from 'ts/utils';
 import Alarms from './comps/Alarms';
 import FieldFilter from './comps/FieldFilter';
 import Ingestion from './comps/Ingestion';
+import Lineage from './comps/Lineage';
+import MetricsCatalog from './comps/MetricsCatalog';
 import Monitoring from './comps/Monitoring';
 import Processing from './comps/Processing';
 import Reporting from './comps/Reporting';
@@ -218,6 +220,24 @@ const PipelineDetail: React.FC = () => {
                       content: (
                         <div className="pd-20">
                           <FieldFilter pipelineInfo={projectPipeline} />
+                        </div>
+                      ),
+                    },
+                    {
+                      label: 'Metrics',
+                      id: 'metrics',
+                      content: (
+                        <div className="pd-20">
+                          <MetricsCatalog pipelineInfo={projectPipeline} />
+                        </div>
+                      ),
+                    },
+                    {
+                      label: 'Lineage',
+                      id: 'lineage',
+                      content: (
+                        <div className="pd-20">
+                          <Lineage pipelineInfo={projectPipeline} />
                         </div>
                       ),
                     },

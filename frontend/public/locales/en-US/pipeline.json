@@ -423,7 +423,9 @@
     "s3TablesJobStartTime": "Start Time",
     "s3TablesNoJobs": "No jobs found",
     "s3TablesEmrAppId": "EMR Application ID",
-    "days": "days"
+    "days": "days",
+    "metrics": "Metrics",
+    "lineage": "Data Lineage"
   },
   "list": {
     "id": "Pipeline ID",

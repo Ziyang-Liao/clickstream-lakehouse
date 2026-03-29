@@ -426,7 +426,9 @@
     "s3TablesJobStartTime": "开始时间",
     "s3TablesNoJobs": "没有找到作业",
     "s3TablesEmrAppId": "EMR 应用程序 ID",
-    "days": "天"
+    "days": "天",
+    "metrics": "指标目录",
+    "lineage": "数据血缘"
   },
   "list": {
     "id": "管道 ID",
