@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+> **Note:** This project was extracted from [aws-bigdata](https://github.com/Ziyang-Liao/aws-bigdata/tree/main/clickstream-lakehouse) monorepo into its own repository starting from v1.2.1 for independent version control.
+
+## [Unreleased] (v1.3.0-dev)
+
+### Added
+
+* **Metric Catalog** — 23 built-in metrics across 10 categories with formula definitions, data source mapping, and dual compute path annotations (S3 Tables + Redshift)
+* **Data Lineage** — 6-layer table-level DAG, field-level lineage for 13 key ODS fields, and impact analysis showing affected Jobs / tables / views / reports per modeling path
+* API endpoints: `/api/metrics/catalog`, `/api/lineage/graph`, `/api/lineage/field`, `/api/lineage/impact`
+* Frontend: Metrics and Lineage tabs in Pipeline detail page
+
+
 ## [1.2.1] - 2026-03-29
 
 ### Fixed
