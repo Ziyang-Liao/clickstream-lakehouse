@@ -26,6 +26,7 @@ import {
 } from '@cloudscape-design/components';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getMetricsCatalog } from 'apis/metrics';
 
 interface MetricItem {
   id: string;
@@ -77,17 +78,14 @@ const MetricsCatalog: React.FC<TabContentProps> = () => {
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
 
   useEffect(() => {
-    fetch('/api/metrics/catalog')
-      .then(res => res.json())
-      .then(data => {
+    getMetricsCatalog()
+      .then((data: any) => {
         if (data.success) {
           setMetrics(data.data.metrics);
           setCategories(data.data.categories);
         }
       })
-      .catch(() => {
-        // Fallback: load from static import for offline dev
-      });
+      .catch(() => {});
   }, []);
 
   const filteredMetrics = metrics.filter(m => {

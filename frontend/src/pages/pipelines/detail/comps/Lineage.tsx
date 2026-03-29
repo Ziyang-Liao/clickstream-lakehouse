@@ -24,6 +24,7 @@ import {
 } from '@cloudscape-design/components';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { getLineageGraph, getFieldLineage, getFieldImpact } from 'apis/lineage';
 
 interface LineageNode {
   id: string;
@@ -58,13 +59,13 @@ interface TabContentProps {
 }
 
 const LAYER_ORDER = ['collection', 'ingestion', 'etl', 'ods', 'modeling', 'consumption'];
-const LAYER_LABELS: Record<string, { en: string; zh: string; color: string }> = {
-  collection: { en: 'Collection', zh: '采集层', color: '#0972d3' },
-  ingestion: { en: 'Ingestion', zh: '接入层', color: '#037f0c' },
-  etl: { en: 'ETL', zh: 'ETL 层', color: '#8b5cf6' },
-  ods: { en: 'ODS', zh: 'ODS 层', color: '#d97706' },
-  modeling: { en: 'Modeling', zh: '建模层', color: '#dc2626' },
-  consumption: { en: 'Consumption', zh: '消费层', color: '#0891b2' },
+const LAYER_LABELS: Record<string, { en: string; zh: string; color: 'blue' | 'grey' | 'green' | 'red' }> = {
+  collection: { en: 'Collection', zh: '采集层', color: 'blue' },
+  ingestion: { en: 'Ingestion', zh: '接入层', color: 'green' },
+  etl: { en: 'ETL', zh: 'ETL 层', color: 'grey' },
+  ods: { en: 'ODS', zh: 'ODS 层', color: 'red' },
+  modeling: { en: 'Modeling', zh: '建模层', color: 'blue' },
+  consumption: { en: 'Consumption', zh: '消费层', color: 'green' },
 };
 
 const Lineage: React.FC<TabContentProps> = () => {
@@ -79,9 +80,8 @@ const Lineage: React.FC<TabContentProps> = () => {
   const [splitOpen, setSplitOpen] = useState(false);
 
   useEffect(() => {
-    fetch('/api/lineage/graph')
-      .then(res => res.json())
-      .then(data => {
+    getLineageGraph()
+      .then((data: any) => {
         if (data.success) {
           setNodes(data.data.nodes);
           setEdges(data.data.edges);
@@ -94,9 +94,9 @@ const Lineage: React.FC<TabContentProps> = () => {
     setSelectedField(`${table}.${field}`);
     setSplitOpen(true);
     Promise.all([
-      fetch(`/api/lineage/field/${table}/${field}`).then(r => r.json()),
-      fetch(`/api/lineage/impact/${table}/${field}`).then(r => r.json()),
-    ]).then(([lineageRes, impactRes]) => {
+      getFieldLineage(table, field),
+      getFieldImpact(table, field),
+    ]).then(([lineageRes, impactRes]: any[]) => {
       if (lineageRes.success) setFieldLineage(lineageRes.data);
       if (impactRes.success) setImpact(impactRes.data);
     }).catch(() => {});
@@ -125,7 +125,7 @@ const Lineage: React.FC<TabContentProps> = () => {
             {nodesByLayer.map(({ layer, label, nodes: layerNodes }) => (
               <div key={layer} style={{ flex: 1, minWidth: 180 }}>
                 <Box textAlign="center" margin={{ bottom: 's' }}>
-                  <Badge color={label.color as any}>{isZh ? label.zh : label.en}</Badge>
+                  <Badge color={label.color}>{isZh ? label.zh : label.en}</Badge>
                 </Box>
                 <SpaceBetween direction="vertical" size="xs">
                   {layerNodes.map(node => (
@@ -137,10 +137,10 @@ const Lineage: React.FC<TabContentProps> = () => {
                       }}
                       style={{
                         padding: '8px 12px',
-                        border: `2px solid ${selectedNode?.id === node.id ? label.color : '#e0e0e0'}`,
+                        border: `2px solid ${selectedNode?.id === node.id ? '#0972d3' : '#e0e0e0'}`,
                         borderRadius: 8,
                         cursor: node.fields ? 'pointer' : 'default',
-                        background: selectedNode?.id === node.id ? `${label.color}10` : '#fff',
+                        background: selectedNode?.id === node.id ? '#f0f8ff' : '#fff',
                         fontSize: 13,
                       }}
                     >
