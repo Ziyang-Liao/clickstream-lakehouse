@@ -21,6 +21,8 @@ import { responseTime } from './middle-ware/response-time';
 import { router_app } from './router/application';
 import { router_env } from './router/environment';
 import { router_field_filter } from './router/field-filter';
+import { router_lineage } from './router/lineage';
+import { router_metrics } from './router/metrics';
 import { router_metadata } from './router/metadata';
 import { router_pipeline } from './router/pipeline';
 import { router_plugin } from './router/plugin';
@@ -65,6 +67,8 @@ app.use('/api/user', router_user);
 app.use('/api/system', router_system);
 app.use('/api/traffic', router_traffic);
 app.use('/api/filter', router_field_filter);
+app.use('/api/metrics', router_metrics);
+app.use('/api/lineage', router_lineage);
 
 // Implement the “catch-all” errorHandler function
 app.use(errorHandler);

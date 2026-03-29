@@ -1,0 +1,293 @@
+{
+  "nodes": [
+    {"id": "sdk_web", "name": "Web SDK", "layer": "collection", "type": "source"},
+    {"id": "sdk_android", "name": "Android SDK", "layer": "collection", "type": "source"},
+    {"id": "sdk_ios", "name": "iOS SDK", "layer": "collection", "type": "source"},
+    {"id": "sdk_flutter", "name": "Flutter SDK", "layer": "collection", "type": "source"},
+    {"id": "sdk_http", "name": "HTTP API", "layer": "collection", "type": "source"},
+    {"id": "ingestion", "name": "Ingestion Server (ECS)", "layer": "ingestion", "type": "service"},
+    {"id": "s3_buffer", "name": "S3 Buffer", "layer": "ingestion", "type": "storage"},
+    {"id": "etl_transform", "name": "TransformerV3", "layer": "etl", "type": "process"},
+    {"id": "etl_ua", "name": "UA Enrichment", "layer": "etl", "type": "process"},
+    {"id": "etl_ip", "name": "IP Enrichment", "layer": "etl", "type": "process"},
+    {"id": "ods_event", "name": "event_v2", "layer": "ods", "type": "table", "fields": ["event_timestamp","event_id","event_name","event_value","user_pseudo_id","user_id","session_id","platform","app_id","device_mobile_model_name","device_operating_system","device_operating_system_version","device_ua_browser","device_ua_os","device_ua_device","device_ua_device_category","device_screen_width","device_screen_height","geo_country","geo_city","geo_region","geo_continent","traffic_source_source","traffic_source_medium","traffic_source_campaign","traffic_source_channel_group","page_view_page_url_path","page_view_page_title","page_view_entrances","screen_view_screen_name","screen_view_screen_id","user_engagement_time_msec","first_touch_time_msec","first_traffic_source","first_traffic_medium","first_traffic_campaign","first_traffic_channel_group","first_app_install_source","app_version"]},
+    {"id": "ods_user", "name": "user_v2", "layer": "ods", "type": "table", "fields": ["user_pseudo_id","user_id","first_touch_time_msec","first_visit_date"]},
+    {"id": "ods_session", "name": "session", "layer": "ods", "type": "table", "fields": ["session_id","user_pseudo_id","session_duration","session_start_time"]},
+    {"id": "ods_item", "name": "item_v2", "layer": "ods", "type": "table", "fields": ["item_id","name","brand","price","category"]},
+    {"id": "model_dau", "name": "dau", "layer": "modeling", "type": "table", "job": "ActiveUserJob"},
+    {"id": "model_new_return", "name": "new_return_user", "layer": "modeling", "type": "table", "job": "NewReturnUserJob"},
+    {"id": "model_retention_d", "name": "retention_daily", "layer": "modeling", "type": "table", "job": "RetentionAnalysisJob"},
+    {"id": "model_retention_w", "name": "retention_weekly", "layer": "modeling", "type": "table", "job": "RetentionAnalysisJob"},
+    {"id": "model_engagement", "name": "engagement_kpi", "layer": "modeling", "type": "table", "job": "EngagementKpiJob"},
+    {"id": "model_session", "name": "session_analysis", "layer": "modeling", "type": "table", "job": "SessionAnalysisJob"},
+    {"id": "model_event_daily", "name": "event_daily_summary", "layer": "modeling", "type": "table", "job": "EventAggregationJob"},
+    {"id": "model_event_name", "name": "event_name", "layer": "modeling", "type": "table", "job": "EventNameJob"},
+    {"id": "model_page", "name": "page_screen_view", "layer": "modeling", "type": "table", "job": "PageScreenViewJob"},
+    {"id": "model_entrance", "name": "entrance", "layer": "modeling", "type": "table", "job": "EntranceExitJob"},
+    {"id": "model_exit", "name": "exit", "layer": "modeling", "type": "table", "job": "EntranceExitJob"},
+    {"id": "model_device", "name": "device", "layer": "modeling", "type": "table", "job": "DeviceJob"},
+    {"id": "model_crash", "name": "crash_rate", "layer": "modeling", "type": "table", "job": "CrashRateJob"},
+    {"id": "model_geo", "name": "geo_user", "layer": "modeling", "type": "table", "job": "GeoUserJob"},
+    {"id": "model_acquisition", "name": "user_acquisition", "layer": "modeling", "type": "table", "job": "UserAcquisitionJob"},
+    {"id": "model_lifecycle", "name": "lifecycle_weekly", "layer": "modeling", "type": "table", "job": "LifecycleJob"},
+    {"id": "model_behavior", "name": "user_behavior", "layer": "modeling", "type": "table", "job": "UserBehaviorJob"},
+    {"id": "rs_retention", "name": "clickstream_retention_dau_wau_sp", "layer": "consumption", "type": "view"},
+    {"id": "rs_acquisition", "name": "clickstream_acquisition_country_new_user_sp", "layer": "consumption", "type": "view"},
+    {"id": "rs_traffic", "name": "clickstream_acquisition_day_traffic_source_user_sp", "layer": "consumption", "type": "view"},
+    {"id": "rs_engagement", "name": "clickstream_engagement_kpi_sp", "layer": "consumption", "type": "view"},
+    {"id": "rs_event", "name": "clickstream_engagement_day_event_view_sp", "layer": "consumption", "type": "view"},
+    {"id": "rs_event_name", "name": "clickstream_engagement_event_name_sp", "layer": "consumption", "type": "view"},
+    {"id": "rs_page", "name": "clickstream_engagement_page_screen_view_sp", "layer": "consumption", "type": "view"},
+    {"id": "rs_entrance", "name": "clickstream_engagement_entrance_sp", "layer": "consumption", "type": "view"},
+    {"id": "rs_exit", "name": "clickstream_engagement_exit_sp", "layer": "consumption", "type": "view"},
+    {"id": "rs_device", "name": "clickstream_device_user_device_sp", "layer": "consumption", "type": "view"},
+    {"id": "rs_crash", "name": "clickstream_device_crash_rate_sp", "layer": "consumption", "type": "view"},
+    {"id": "rs_lifecycle", "name": "clickstream_lifecycle_weekly_view_sp", "layer": "consumption", "type": "view"},
+    {"id": "qs_dashboard", "name": "QuickSight Dashboard", "layer": "consumption", "type": "report"}
+  ],
+  "edges": [
+    {"source": "sdk_web", "target": "ingestion"},
+    {"source": "sdk_android", "target": "ingestion"},
+    {"source": "sdk_ios", "target": "ingestion"},
+    {"source": "sdk_flutter", "target": "ingestion"},
+    {"source": "sdk_http", "target": "ingestion"},
+    {"source": "ingestion", "target": "s3_buffer"},
+    {"source": "s3_buffer", "target": "etl_transform"},
+    {"source": "etl_transform", "target": "etl_ua"},
+    {"source": "etl_ua", "target": "etl_ip"},
+    {"source": "etl_ip", "target": "ods_event"},
+    {"source": "etl_ip", "target": "ods_user"},
+    {"source": "etl_ip", "target": "ods_session"},
+    {"source": "etl_ip", "target": "ods_item"},
+    {"source": "ods_event", "target": "model_dau"},
+    {"source": "ods_event", "target": "model_new_return"},
+    {"source": "ods_event", "target": "model_retention_d"},
+    {"source": "ods_event", "target": "model_retention_w"},
+    {"source": "ods_event", "target": "model_engagement"},
+    {"source": "ods_event", "target": "model_session"},
+    {"source": "ods_event", "target": "model_event_daily"},
+    {"source": "ods_event", "target": "model_event_name"},
+    {"source": "ods_event", "target": "model_page"},
+    {"source": "ods_event", "target": "model_entrance"},
+    {"source": "ods_event", "target": "model_exit"},
+    {"source": "ods_event", "target": "model_device"},
+    {"source": "ods_event", "target": "model_crash"},
+    {"source": "ods_event", "target": "model_geo"},
+    {"source": "ods_event", "target": "model_acquisition"},
+    {"source": "ods_event", "target": "model_lifecycle"},
+    {"source": "ods_event", "target": "model_behavior"},
+    {"source": "model_dau", "target": "rs_retention"},
+    {"source": "model_new_return", "target": "rs_acquisition"},
+    {"source": "model_retention_d", "target": "rs_retention"},
+    {"source": "model_engagement", "target": "rs_engagement"},
+    {"source": "model_session", "target": "rs_engagement"},
+    {"source": "model_event_daily", "target": "rs_event"},
+    {"source": "model_event_name", "target": "rs_event_name"},
+    {"source": "model_page", "target": "rs_page"},
+    {"source": "model_entrance", "target": "rs_entrance"},
+    {"source": "model_exit", "target": "rs_exit"},
+    {"source": "model_device", "target": "rs_device"},
+    {"source": "model_crash", "target": "rs_crash"},
+    {"source": "model_geo", "target": "rs_acquisition"},
+    {"source": "model_acquisition", "target": "rs_traffic"},
+    {"source": "model_lifecycle", "target": "rs_lifecycle"},
+    {"source": "rs_retention", "target": "qs_dashboard"},
+    {"source": "rs_acquisition", "target": "qs_dashboard"},
+    {"source": "rs_traffic", "target": "qs_dashboard"},
+    {"source": "rs_engagement", "target": "qs_dashboard"},
+    {"source": "rs_event", "target": "qs_dashboard"},
+    {"source": "rs_event_name", "target": "qs_dashboard"},
+    {"source": "rs_page", "target": "qs_dashboard"},
+    {"source": "rs_entrance", "target": "qs_dashboard"},
+    {"source": "rs_exit", "target": "qs_dashboard"},
+    {"source": "rs_device", "target": "qs_dashboard"},
+    {"source": "rs_crash", "target": "qs_dashboard"},
+    {"source": "rs_lifecycle", "target": "qs_dashboard"}
+  ],
+  "fieldLineage": {
+    "event_v2.event_timestamp": {
+      "upstream": [{"table": "sdk_raw", "field": "event_timestamp", "transform": "TransformerV3"}],
+      "downstream": [
+        {"table": "dau", "field": "event_date", "transform": "ActiveUserJob", "logic": "DATE(event_timestamp)"},
+        {"table": "retention_daily", "field": "cohort_date", "transform": "RetentionAnalysisJob"},
+        {"table": "event_daily_summary", "field": "event_date", "transform": "EventAggregationJob"},
+        {"table": "event_daily_summary", "field": "event_hour", "transform": "EventAggregationJob", "logic": "HOUR(event_timestamp)"},
+        {"table": "lifecycle_weekly", "field": "time_period_week", "transform": "LifecycleJob", "logic": "WEEK(event_timestamp)"},
+        {"table": "session_analysis", "field": "session_start_time", "transform": "SessionAnalysisJob"}
+      ]
+    },
+    "event_v2.user_pseudo_id": {
+      "upstream": [{"table": "sdk_raw", "field": "user_pseudo_id", "transform": "TransformerV3"}],
+      "downstream": [
+        {"table": "dau", "field": "dau", "transform": "ActiveUserJob", "logic": "COUNT(DISTINCT user_pseudo_id)"},
+        {"table": "new_return_user", "field": "user_type", "transform": "NewReturnUserJob"},
+        {"table": "retention_daily", "field": "retained_users", "transform": "RetentionAnalysisJob"},
+        {"table": "user_behavior", "field": "total_events", "transform": "UserBehaviorJob"},
+        {"table": "geo_user", "field": "user_count", "transform": "GeoUserJob"},
+        {"table": "engagement_kpi", "field": "total_users", "transform": "EngagementKpiJob"},
+        {"table": "user_acquisition", "field": "new_user_count", "transform": "UserAcquisitionJob"}
+      ]
+    },
+    "event_v2.event_name": {
+      "upstream": [{"table": "sdk_raw", "field": "event_name", "transform": "TransformerV3"}],
+      "downstream": [
+        {"table": "event_name", "field": "event_count", "transform": "EventNameJob", "logic": "GROUP BY event_name"},
+        {"table": "crash_rate", "field": "crash_rate", "transform": "CrashRateJob", "logic": "FILTER event_name='_app_exception'"},
+        {"table": "new_return_user", "field": "is_new", "transform": "NewReturnUserJob", "logic": "FILTER event_name='_first_open'"},
+        {"table": "lifecycle_weekly", "field": "user_count", "transform": "LifecycleJob", "logic": "FILTER event_name='_session_start'"},
+        {"table": "page_screen_view", "field": "view_count", "transform": "PageScreenViewJob", "logic": "FILTER event_name IN ('_page_view','_screen_view')"},
+        {"table": "entrance", "field": "entrance_count", "transform": "EntranceExitJob", "logic": "FILTER event_name IN ('_page_view','_screen_view')"}
+      ]
+    },
+    "event_v2.session_id": {
+      "upstream": [{"table": "sdk_raw", "field": "session_id", "transform": "TransformerV3"}],
+      "downstream": [
+        {"table": "session_analysis", "field": "session_duration", "transform": "SessionAnalysisJob"},
+        {"table": "engagement_kpi", "field": "engaged_sessions", "transform": "EngagementKpiJob"},
+        {"table": "user_acquisition", "field": "session_count", "transform": "UserAcquisitionJob"},
+        {"table": "user_behavior", "field": "total_sessions", "transform": "UserBehaviorJob"}
+      ]
+    },
+    "event_v2.device_mobile_model_name": {
+      "upstream": [{"table": "sdk_raw", "field": "device_info", "transform": "TransformerV3"}],
+      "downstream": [
+        {"table": "device", "field": "device_mobile_model_name", "transform": "DeviceJob", "logic": "GROUP BY device_mobile_model_name"}
+      ]
+    },
+    "event_v2.device_ua_browser": {
+      "upstream": [{"table": "sdk_raw", "field": "user_agent", "transform": "UAEnrichmentV2", "logic": "Parse User-Agent string"}],
+      "downstream": [
+        {"table": "device", "field": "device_ua_browser", "transform": "DeviceJob"}
+      ]
+    },
+    "event_v2.geo_country": {
+      "upstream": [{"table": "sdk_raw", "field": "ip_address", "transform": "IPEnrichmentV2", "logic": "GeoIP lookup"}],
+      "downstream": [
+        {"table": "geo_user", "field": "geo_country", "transform": "GeoUserJob", "logic": "GROUP BY geo_country"},
+        {"table": "event_daily_summary", "field": "geo_country", "transform": "EventAggregationJob"}
+      ]
+    },
+    "event_v2.geo_city": {
+      "upstream": [{"table": "sdk_raw", "field": "ip_address", "transform": "IPEnrichmentV2", "logic": "GeoIP lookup"}],
+      "downstream": [
+        {"table": "geo_user", "field": "geo_city", "transform": "GeoUserJob", "logic": "GROUP BY geo_city"}
+      ]
+    },
+    "event_v2.traffic_source_source": {
+      "upstream": [{"table": "sdk_raw", "field": "utm_source", "transform": "TransformerV3"}],
+      "downstream": [
+        {"table": "user_acquisition", "field": "traffic_source_source", "transform": "UserAcquisitionJob", "logic": "GROUP BY traffic_source_source"}
+      ]
+    },
+    "event_v2.page_view_page_url_path": {
+      "upstream": [{"table": "sdk_raw", "field": "page_url", "transform": "TransformerV3", "logic": "Extract URL path"}],
+      "downstream": [
+        {"table": "page_screen_view", "field": "page_view_page_url_path", "transform": "PageScreenViewJob"},
+        {"table": "entrance", "field": "page_view_page_url_path", "transform": "EntranceExitJob"},
+        {"table": "exit", "field": "page_view_page_url_path", "transform": "EntranceExitJob"}
+      ]
+    },
+    "event_v2.user_engagement_time_msec": {
+      "upstream": [{"table": "sdk_raw", "field": "engagement_time_msec", "transform": "TransformerV3"}],
+      "downstream": [
+        {"table": "engagement_kpi", "field": "avg_engagement_time_per_session_seconds", "transform": "EngagementKpiJob", "logic": "SUM / COUNT / 1000"},
+        {"table": "session_analysis", "field": "session_duration", "transform": "SessionAnalysisJob"},
+        {"table": "user_acquisition", "field": "total_engagement_time_msec", "transform": "UserAcquisitionJob"}
+      ]
+    },
+    "event_v2.event_value": {
+      "upstream": [{"table": "sdk_raw", "field": "event_value", "transform": "TransformerV3"}],
+      "downstream": [
+        {"table": "event_name", "field": "event_value", "transform": "EventNameJob", "logic": "SUM(event_value)"},
+        {"table": "user_behavior", "field": "ltv", "transform": "UserBehaviorJob", "logic": "SUM(event_value) per user"}
+      ]
+    },
+    "event_v2.first_touch_time_msec": {
+      "upstream": [{"table": "sdk_raw", "field": "first_touch_time_msec", "transform": "TransformerV3"}],
+      "downstream": [
+        {"table": "new_return_user", "field": "first_date", "transform": "NewReturnUserJob"},
+        {"table": "retention_daily", "field": "cohort_date", "transform": "RetentionAnalysisJob", "logic": "DATE(first_touch_time_msec)"}
+      ]
+    }
+  },
+  "impactAnalysis": {
+    "event_v2.event_timestamp": {
+      "jobs": ["ActiveUserJob","NewReturnUserJob","RetentionAnalysisJob","EngagementKpiJob","SessionAnalysisJob","EventAggregationJob","EventNameJob","PageScreenViewJob","EntranceExitJob","DeviceJob","CrashRateJob","GeoUserJob","UserAcquisitionJob","LifecycleJob","UserBehaviorJob"],
+      "tables": ["dau","new_return_user","retention_daily","retention_weekly","engagement_kpi","session_analysis","event_daily_summary","event_name","page_screen_view","entrance","exit","device","crash_rate","geo_user","user_acquisition","lifecycle_weekly","user_behavior"],
+      "views": ["clickstream_retention_dau_wau_sp","clickstream_acquisition_country_new_user_sp","clickstream_acquisition_day_traffic_source_user_sp","clickstream_engagement_kpi_sp","clickstream_engagement_day_event_view_sp","clickstream_engagement_event_name_sp","clickstream_engagement_page_screen_view_sp","clickstream_engagement_entrance_sp","clickstream_engagement_exit_sp","clickstream_device_user_device_sp","clickstream_device_crash_rate_sp","clickstream_lifecycle_weekly_view_sp"],
+      "reports": ["Retention Dashboard","Acquisition Dashboard","Traffic Source Dashboard","Engagement Dashboard","Event Dashboard","Page View Dashboard","Entrance Dashboard","Exit Dashboard","Device Dashboard","Crash Dashboard","Lifecycle Dashboard"]
+    },
+    "event_v2.user_pseudo_id": {
+      "jobs": ["ActiveUserJob","NewReturnUserJob","RetentionAnalysisJob","EngagementKpiJob","SessionAnalysisJob","EventAggregationJob","GeoUserJob","UserAcquisitionJob","LifecycleJob","UserBehaviorJob","CrashRateJob","EventNameJob"],
+      "tables": ["dau","new_return_user","retention_daily","retention_weekly","engagement_kpi","session_analysis","event_daily_summary","geo_user","user_acquisition","lifecycle_weekly","user_behavior","crash_rate","event_name"],
+      "views": ["clickstream_retention_dau_wau_sp","clickstream_acquisition_country_new_user_sp","clickstream_acquisition_day_traffic_source_user_sp","clickstream_engagement_kpi_sp","clickstream_engagement_day_event_view_sp","clickstream_lifecycle_weekly_view_sp","clickstream_device_crash_rate_sp"],
+      "reports": ["Retention Dashboard","Acquisition Dashboard","Traffic Source Dashboard","Engagement Dashboard","Event Dashboard","Lifecycle Dashboard","Crash Dashboard"]
+    },
+    "event_v2.event_name": {
+      "jobs": ["EventNameJob","CrashRateJob","NewReturnUserJob","LifecycleJob","PageScreenViewJob","EntranceExitJob","EngagementKpiJob","EventAggregationJob"],
+      "tables": ["event_name","crash_rate","new_return_user","lifecycle_weekly","page_screen_view","entrance","exit","engagement_kpi","event_daily_summary"],
+      "views": ["clickstream_engagement_event_name_sp","clickstream_device_crash_rate_sp","clickstream_acquisition_country_new_user_sp","clickstream_lifecycle_weekly_view_sp","clickstream_engagement_page_screen_view_sp","clickstream_engagement_entrance_sp","clickstream_engagement_exit_sp","clickstream_engagement_kpi_sp"],
+      "reports": ["Event Dashboard","Crash Dashboard","Acquisition Dashboard","Lifecycle Dashboard","Page View Dashboard","Entrance Dashboard","Exit Dashboard","Engagement Dashboard"]
+    },
+    "event_v2.session_id": {
+      "jobs": ["SessionAnalysisJob","EngagementKpiJob","UserAcquisitionJob","UserBehaviorJob"],
+      "tables": ["session_analysis","engagement_kpi","user_acquisition","user_behavior"],
+      "views": ["clickstream_engagement_kpi_sp","clickstream_acquisition_day_traffic_source_user_sp"],
+      "reports": ["Engagement Dashboard","Traffic Source Dashboard"]
+    },
+    "event_v2.device_mobile_model_name": {
+      "jobs": ["DeviceJob"],
+      "tables": ["device"],
+      "views": ["clickstream_device_user_device_sp"],
+      "reports": ["Device Dashboard"]
+    },
+    "event_v2.device_ua_browser": {
+      "jobs": ["DeviceJob"],
+      "tables": ["device"],
+      "views": ["clickstream_device_user_device_sp"],
+      "reports": ["Device Dashboard"]
+    },
+    "event_v2.geo_country": {
+      "jobs": ["GeoUserJob","EventAggregationJob"],
+      "tables": ["geo_user","event_daily_summary"],
+      "views": ["clickstream_acquisition_country_new_user_sp","clickstream_engagement_day_event_view_sp"],
+      "reports": ["Geo Dashboard","Event Dashboard"]
+    },
+    "event_v2.geo_city": {
+      "jobs": ["GeoUserJob"],
+      "tables": ["geo_user"],
+      "views": ["clickstream_acquisition_country_new_user_sp"],
+      "reports": ["Geo Dashboard"]
+    },
+    "event_v2.traffic_source_source": {
+      "jobs": ["UserAcquisitionJob"],
+      "tables": ["user_acquisition"],
+      "views": ["clickstream_acquisition_day_traffic_source_user_sp"],
+      "reports": ["Traffic Source Dashboard"]
+    },
+    "event_v2.page_view_page_url_path": {
+      "jobs": ["PageScreenViewJob","EntranceExitJob"],
+      "tables": ["page_screen_view","entrance","exit"],
+      "views": ["clickstream_engagement_page_screen_view_sp","clickstream_engagement_entrance_sp","clickstream_engagement_exit_sp"],
+      "reports": ["Page View Dashboard","Entrance Dashboard","Exit Dashboard"]
+    },
+    "event_v2.user_engagement_time_msec": {
+      "jobs": ["EngagementKpiJob","SessionAnalysisJob","UserAcquisitionJob"],
+      "tables": ["engagement_kpi","session_analysis","user_acquisition"],
+      "views": ["clickstream_engagement_kpi_sp","clickstream_acquisition_day_traffic_source_user_sp"],
+      "reports": ["Engagement Dashboard","Traffic Source Dashboard"]
+    },
+    "event_v2.event_value": {
+      "jobs": ["EventNameJob","UserBehaviorJob"],
+      "tables": ["event_name","user_behavior"],
+      "views": ["clickstream_engagement_event_name_sp"],
+      "reports": ["Event Dashboard"]
+    },
+    "event_v2.first_touch_time_msec": {
+      "jobs": ["NewReturnUserJob","RetentionAnalysisJob"],
+      "tables": ["new_return_user","retention_daily","retention_weekly"],
+      "views": ["clickstream_acquisition_country_new_user_sp","clickstream_retention_dau_wau_sp"],
+      "reports": ["Acquisition Dashboard","Retention Dashboard"]
+    }
+  }
+}
