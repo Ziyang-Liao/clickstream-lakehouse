@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-03-29
+
+### Fixed
+
+* Fixed S3 template bucket naming collision during deployment
+* Fixed ECR image references to use deployer's own account registry
+* Standardized all build-time placeholders for portable cross-account deployment
+
+### Changed
+
+* `dictionary.json` now uses `__DIST_OUTPUT_BUCKET__` placeholder for build automation
+
+## [1.2.0] - 2026-03-15
+
+### Added
+
+* **S3 Tables Data Modeling** — EMR Serverless + S3 Tables (Apache Iceberg) as an alternative to Redshift modeling
+  * 15 Spark modeling jobs: event aggregation, user behavior, session analysis, retention, DAU/WAU/MAU, etc.
+  * Iceberg MERGE INTO for idempotent writes
+  * EventBridge scheduling + Lambda job submitter with exponential backoff
+  * API endpoints for manual trigger, status query, and job history
+  * Pipeline wizard integration in the frontend
+* **Field Collection Filtering** — whitelist/blacklist field filtering in ETL stage via Web console
+* **Data Sync Module** — cross-region / cross-account data synchronization
+
+### Changed
+
+* Upgraded to Glue 5.0 ETL engine
+* Upgraded Iceberg Kafka Connect to 1.7.1
+
 ## [1.1.15] - 2025-10-10
 
 ### Removed
