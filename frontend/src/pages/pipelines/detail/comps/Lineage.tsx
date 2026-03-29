@@ -93,13 +93,15 @@ const Lineage: React.FC<TabContentProps> = () => {
   const handleFieldClick = useCallback((table: string, field: string) => {
     setSelectedField(`${table}.${field}`);
     setSplitOpen(true);
+    setFieldLineage(null);
+    setImpact(null);
     Promise.all([
-      getFieldLineage(table, field),
-      getFieldImpact(table, field),
+      getFieldLineage(table, field).catch(() => ({ success: false })),
+      getFieldImpact(table, field).catch(() => ({ success: false })),
     ]).then(([lineageRes, impactRes]: any[]) => {
       if (lineageRes.success) setFieldLineage(lineageRes.data);
       if (impactRes.success) setImpact(impactRes.data);
-    }).catch(() => {});
+    });
   }, []);
 
   const nodesByLayer = LAYER_ORDER.map(layer => ({
@@ -191,6 +193,13 @@ const Lineage: React.FC<TabContentProps> = () => {
       {/* Field lineage + impact split panel */}
       {splitOpen && selectedField && (
         <Container header={<Header variant="h3">{isZh ? '字段血缘' : 'Field Lineage'}: <code>{selectedField}</code></Header>}>
+          {!fieldLineage && !impact ? (
+            <Box textAlign="center" color="text-body-secondary" padding="l">
+              {isZh
+                ? '该字段暂无血缘数据。目前仅支持 event_v2 表的核心字段。'
+                : 'No lineage data available for this field. Currently only core event_v2 fields are supported.'}
+            </Box>
+          ) : (
           <SpaceBetween direction="vertical" size="l">
             {/* Upstream */}
             {fieldLineage?.upstream && (
@@ -272,6 +281,7 @@ const Lineage: React.FC<TabContentProps> = () => {
               </div>
             )}
           </SpaceBetween>
+          )}
         </Container>
       )}
     </SpaceBetween>
