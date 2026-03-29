@@ -3,7 +3,7 @@
     "name": "Solution",
     "data": {
       "name": "clickstream-analytics-on-aws",
-      "dist_output_bucket": "clickstream-templates-aedfdc2a",
+      "dist_output_bucket": "clickstream-templates-ba29aff7",
       "target": "v1.2.1",
       "prefix": "",
       "version": "v1.2.1"
