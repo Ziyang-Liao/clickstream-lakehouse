@@ -18,7 +18,6 @@ import {
   SpaceBetween,
   Table,
   Badge,
-  SplitPanel,
   ColumnLayout,
   StatusIndicator,
 } from '@cloudscape-design/components';
@@ -72,7 +71,7 @@ const Lineage: React.FC<TabContentProps> = () => {
   const { i18n } = useTranslation();
   const isZh = i18n.language?.startsWith('zh');
   const [nodes, setNodes] = useState<LineageNode[]>([]);
-  const [edges, setEdges] = useState<LineageEdge[]>([]);
+  const [_edges, setEdges] = useState<LineageEdge[]>([]);
   const [selectedNode, setSelectedNode] = useState<LineageNode | null>(null);
   const [selectedField, setSelectedField] = useState<string | null>(null);
   const [fieldLineage, setFieldLineage] = useState<any>(null);
@@ -87,7 +86,7 @@ const Lineage: React.FC<TabContentProps> = () => {
           setEdges(data.data.edges);
         }
       })
-      .catch(() => {});
+      .catch(() => { /* no-op */ });
   }, []);
 
   const handleFieldClick = useCallback((table: string, field: string) => {
@@ -204,7 +203,7 @@ const Lineage: React.FC<TabContentProps> = () => {
             {/* Upstream */}
             {fieldLineage?.upstream && (
               <div>
-                <Box variant="h4">{isZh ? '上游来源' : 'Upstream'}</Box>
+                <Box variant="h3">{isZh ? '上游来源' : 'Upstream'}</Box>
                 <Table
                   columnDefinitions={[
                     { id: 'table', header: isZh ? '来源表' : 'Source', cell: (i: FieldLineageItem) => <code>{i.table}</code> },
@@ -221,7 +220,7 @@ const Lineage: React.FC<TabContentProps> = () => {
             {/* Downstream */}
             {fieldLineage?.downstream && (
               <div>
-                <Box variant="h4">{isZh ? '下游去向' : 'Downstream'}</Box>
+                <Box variant="h3">{isZh ? '下游去向' : 'Downstream'}</Box>
                 <Table
                   columnDefinitions={[
                     { id: 'table', header: isZh ? '目标表' : 'Target', cell: (i: FieldLineageItem) => <code>{i.table}</code> },
@@ -238,10 +237,10 @@ const Lineage: React.FC<TabContentProps> = () => {
             {/* Impact Analysis */}
             {impact && (
               <div>
-                <Box variant="h4">{isZh ? '影响分析' : 'Impact Analysis'}</Box>
+                <Box variant="h3">{isZh ? '影响分析' : 'Impact Analysis'}</Box>
                 <SpaceBetween direction="vertical" size="m">
                   {/* S3 Tables Path */}
-                  <Container header={<Header variant="h4">
+                  <Container header={<Header variant="h3">
                     <Badge color="blue">S3 Tables</Badge> {isZh ? '路径 (EMR Serverless + Iceberg)' : 'Path (EMR Serverless + Iceberg)'}
                   </Header>}>
                     <ColumnLayout columns={2} variant="text-grid">
@@ -260,7 +259,7 @@ const Lineage: React.FC<TabContentProps> = () => {
                   </Container>
 
                   {/* Redshift Path */}
-                  <Container header={<Header variant="h4">
+                  <Container header={<Header variant="h3">
                     <Badge color="red">Redshift</Badge> {isZh ? '路径 (Redshift Serverless + QuickSight)' : 'Path (Redshift Serverless + QuickSight)'}
                   </Header>}>
                     <ColumnLayout columns={2} variant="text-grid">

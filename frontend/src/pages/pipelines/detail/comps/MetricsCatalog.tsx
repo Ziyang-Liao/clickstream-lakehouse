@@ -56,7 +56,7 @@ interface TabContentProps {
   pipelineInfo?: IPipeline;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
+const CATEGORY_COLORS: Record<string, 'blue' | 'green' | 'red' | 'grey'> = {
   user_scale: 'blue',
   retention: 'green',
   engagement: 'red',
@@ -70,7 +70,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const MetricsCatalog: React.FC<TabContentProps> = () => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const isZh = i18n.language?.startsWith('zh');
   const [metrics, setMetrics] = useState<MetricItem[]>([]);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
@@ -85,7 +85,7 @@ const MetricsCatalog: React.FC<TabContentProps> = () => {
           setCategories(data.data.categories);
         }
       })
-      .catch(() => {});
+      .catch(() => { /* no-op */ });
   }, []);
 
   const filteredMetrics = metrics.filter(m => {
