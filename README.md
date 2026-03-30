@@ -281,10 +281,14 @@ Launch this solution in an AWS Region where required services are available.
 
 ## Deployment Steps
 
+### Step 1: Deploy the Control Plane (Automated)
+
+The control plane includes the Web console, API Gateway, Cognito authentication, and CloudFront distribution.
+
 1. Clone the repository:
    ```bash
-   git clone https://github.com/aws-solutions/clickstream-analytics-on-aws.git
-   cd clickstream-analytics-on-aws
+   git clone https://github.com/Ziyang-Liao/clickstream-lakehouse.git
+   cd clickstream-lakehouse
    ```
 
 2. Install pnpm and dependencies:
@@ -298,33 +302,60 @@ Launch this solution in an AWS Region where required services are available.
    npx cdk bootstrap
    ```
 
-4. Deploy the stack:
-
-   To deploy code from your local machine to your AWS account, follow the deployment instructions
-   in [README.md](./deployment/README.md).
+4. Deploy the control plane:
    ```bash
    cd deployment
-   sh solution-deploy.sh --region <AWS Region> --profile <AWS Profile Name> --email <User Email> --template-deploy
+   sh solution-deploy.sh --region <AWS Region> --profile <AWS Profile Name> --email <User Email>
    ```
 
 5. Note the CloudFront URL from the outputs to access the web console.
 
+### Step 2: Create Data Pipeline (Manual via Web Console)
+
+Data pipelines are created through the Web console because they require interactive configuration choices.
+
+1. **Access the Web Console** — Navigate to the CloudFront URL and sign in with the credentials sent to your email
+
+2. **Create a Project** — Click "Create project", enter a project name
+
+3. **Create a Data Pipeline** — In the project, click "Create pipeline" and follow the wizard:
+
+   - **Network**: Select VPC, public subnets (for ALB), and private subnets (for compute)
+   - **Ingestion**: Choose sink type (S3 recommended for getting started)
+   - **Data Processing**: Configure ETL schedule, transformer, and enrichment plugins
+   - **Data Modeling** — Choose ONE of the following (mutually exclusive):
+
+     | Option | Compute Engine | Storage | Query | Best For |
+     |--------|---------------|---------|-------|----------|
+     | **S3 Tables** | EMR Serverless (Spark) | S3 Tables (Iceberg) | Athena | Cost-effective, serverless |
+     | **Redshift** | Redshift Serverless | Redshift Tables | QuickSight | Rich dashboards, complex SQL |
+
+   - **S3 Tables option**: Configure S3 Table Bucket, namespace, schedule, and retention
+   - **Redshift option**: Configure Redshift Serverless workgroup or provisioned cluster
+
+4. **Create an App** — After pipeline creation, create an app and note the app ID for SDK integration
+
+> **Note**: Pipeline deployment takes 10-20 minutes. Monitor progress in the Pipeline detail page.
+
 ## Deployment Validation
 
-After deploying the solution, you can validate the deployment by:
+After deploying the control plane:
 
-1. Open the AWS CloudFormation console and verify the status of the stack is CREATE_COMPLETE.
-2. Navigate to the CloudFront URL provided in the CloudFormation outputs to access the web console.
-3. Sign in with the credentials sent to the email address you provided during deployment.
-4. Verify you can access the dashboard and create a new data pipeline.
-5. For CDK deployment, you can validate by checking the CloudFormation stacks in the console or by running:
-   ```bash
-   aws cloudformation describe-stacks --stack-name cloudfront-s3-control-plane-stack-global
-   ```
+1. Open the AWS CloudFormation console and verify `cloudfront-s3-control-plane-stack-global` status is `CREATE_COMPLETE`
+2. Navigate to the CloudFront URL to access the web console
+3. Sign in with the credentials sent to your email
+4. Verify you can access the dashboard
+
+After creating a data pipeline via the web console:
+
+1. In the Pipeline detail page, verify all stacks show `CREATE_COMPLETE`
+2. Check the Ingestion tab for the endpoint URL
+3. Check the Metrics tab for the built-in metric definitions
+4. Check the Lineage tab for the data flow visualization
 
 ## Running the Guidance
 
-After successful deployment, you can start using the Clickstream Analytics solution by following these steps:
+After successful deployment:
 
 1. **Access the Web Console**:
     - Navigate to the CloudFront URL provided in the CloudFormation outputs
@@ -388,16 +419,21 @@ For more information, refer to the [Pipeline Management][doc-pipeline-management
 
 ## Cleanup
 
-To clean up all resources deployed by this solution, follow these steps:
+To clean up all resources, follow this order (data pipelines must be deleted before the control plane):
 
-1. **Delete Data Pipelines First**:
+1. **Delete Data Pipelines First** (via Web Console):
     - In the web console, navigate to the "Pipelines" section
     - Select each pipeline and click "Delete"
-    - Wait for all pipeline deletions to complete before proceeding
+    - Wait for all pipeline deletions to complete (check CloudFormation console)
 
 2. **Delete Apps**:
     - In the web console, navigate to the "Apps" section
     - Delete all apps you've created
+
+3. **Delete the Control Plane**:
+   ```bash
+   aws cloudformation delete-stack --stack-name cloudfront-s3-control-plane-stack-global --region <region> --profile <profile>
+   ```
 
 3. **Delete CloudFormation Stacks**:
       ```bash
