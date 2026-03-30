@@ -48,6 +48,8 @@ routerRoles.set('ALL /api/segments/*', [IUserRole.ADMIN, IUserRole.ANALYST]);
 routerRoles.set('ALL /api/traffic/*', [IUserRole.ADMIN, IUserRole.ANALYST]);
 routerRoles.set('GET /api/filter/*', [IUserRole.ADMIN, IUserRole.OPERATOR, IUserRole.ANALYST, IUserRole.ANALYST_READER]);
 routerRoles.set('ALL /api/filter/*', [IUserRole.ADMIN, IUserRole.OPERATOR]);
+routerRoles.set('GET /api/metrics/*', [IUserRole.ADMIN, IUserRole.OPERATOR, IUserRole.ANALYST, IUserRole.ANALYST_READER]);
+routerRoles.set('GET /api/lineage/*', [IUserRole.ADMIN, IUserRole.OPERATOR, IUserRole.ANALYST, IUserRole.ANALYST_READER]);
 
 
 const FORBIDDEN_MESSAGE = 'Insufficient permissions to access the API.';
