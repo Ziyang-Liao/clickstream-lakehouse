@@ -2256,6 +2256,8 @@ const Content: React.FC<ContentProps> = (props: ContentProps) => {
                       enableRedshift: false,
                       enableReporting: false,
                       s3TablesNamespace: prev.s3TablesNamespace || `clickstream_${prev.projectId}`,
+                      s3TablesScheduleExpression: prev.s3TablesScheduleExpression || 'cron(0 2 * * ? *)',
+                      s3TablesDataRetentionDays: prev.s3TablesDataRetentionDays || 365,
                     };
                   });
                 } else {
