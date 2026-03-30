@@ -1002,6 +1002,20 @@ const Content: React.FC<ContentProps> = (props: ContentProps) => {
         createPipelineObj.dataModeling.redshift.provisioned = null;
       }
     }
+
+    // set S3 Tables modeling config
+    if (pipelineInfo.enableS3TablesModeling) {
+      createPipelineObj.dataModeling.s3Tables = {
+        ...createPipelineObj.dataModeling.s3Tables,
+        tableBucketArn: pipelineInfo.dataModeling?.s3Tables?.tableBucketArn || '',
+        namespace: pipelineInfo.s3TablesNamespace || '',
+        scheduleExpression: pipelineInfo.s3TablesScheduleExpression || 'cron(0 2 * * ? *)',
+        dataRetentionDays: pipelineInfo.s3TablesDataRetentionDays || 365,
+      };
+    } else {
+      createPipelineObj.dataModeling.s3Tables = null;
+    }
+
     return createPipelineObj;
   };
 
